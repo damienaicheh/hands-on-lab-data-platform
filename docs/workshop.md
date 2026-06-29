@@ -1,25 +1,40 @@
-🎯 Vision globale du workshop
+---
+published: true
+type: workshop
+title: Product Hands-on Lab - AI Data Platform
+short_title: AI Data Platform
+description: This workshop will cover how to build agentic applications using different data sources. It will cover Foundry IQ, Fabric IQ, and Foundry RTI. It will also cover how to build a multi-agent system using MCP.
+level: beginner # Required. Can be 'beginner', 'intermediate' or 'advanced'
+navigation_numbering: true
+authors: # Required. You can add as many authors as needed
+  - Vincent Guyonvarch
+  - Damien Aicheh
+contacts: # Required. Must match the number of authors
+  - "@damienaicheh"
+  - "@viguyonv"
+duration_minutes: 300
+tags: microsoft foundry, fabric, foundry iq, fabric iq, agent framework, mcp, ai search, foundry iq, dev-ui, csu, codespace, devcontainer
+navigation_levels: 3
+banner_url: assets/banner.jpg
+audience: developers, architects, AI engineers
 
-👉 Objectif :
+---
+
+# Product Hands-on Lab - AI Data Platform
+
+## What You Will Learn
+
+### Architecture
+
+Orchestrator Agent => Agent Fabric => Sell, products..
+                   => Agent Foundry => New products, discounts, other..
 
 
-🧩 Lab 0 — Introduction & Architecture
-🎓 Objectif
+### Key Technologies
 
-Comprendre l’architecture globale.
+---
 
-Foundry IQ vs Fabric IQ (rôle de chacun)
-Agents + Knowledge + Retrieval
-Real-time vs batch
-
-Architecture cible :
-
-Agent orchestrator => Agent Fabric => Vente
-                   => Agent Foundry => Ventes de nouveaux / produits / promotions
-
-
-🧱 Lab 1 — Setup des données multi-domaines (Prerequis)
-🎓 Objectif
+## Prerequisites
 
 => Scripts Terraform (Fabric Capacity, Foundry)
 => ms-fabric-cli
@@ -27,136 +42,64 @@ Agent orchestrator => Agent Fabric => Vente
 4 domaines distincts (ex : Finance, RH, Sales, Supply)
 
 
-📚 Lab 2 — Knowledge Base & Knowledge Sources
-🎓 Objectif
+---
 
-Storage Account => Promos
-Source vers interne
+## Foundry IQ Managed
 
-Knowledge Source
+- Create it with basic markdown files
+- Update orchestrator agent provided
 
-🔍 Lab 3 — Retrieval avancé (Blob + AI Search)
-🎓 Objectif
-Mettre en place une stratégie de recherche performante.
-Contenu
+---
 
-Connecter Blob Storage
-Configurer AI Search
-Implémenter :
+## Create Knowledge sources
 
-Retrieval depuis Blob via AI Search
-Hybrid search (keyword + semantic)
+- Create knowledge source with Blob Storage
+- Create knowledge source with Web
+- Create knowledge source with AI Search
 
-🏢 Lab 4 — Foundry IQ Managed
-🎓 Objectif
-Industrialiser.
-Contenu
+---
 
-Déploiement Managed
-Gouvernance :
+## Create Knowledge bases with agent retrieval
 
-monitoring
-coûts
-scaling
+- Create knowledge bases
+- Create agents with retrieval capacities
 
-🤖 Lab 5 — Agent Retrieval & grounding
-🎓 Objectif
-Créer des agents capables d'exploiter la donnée.
-Contenu
+---
 
-Création d’un agent Foundry
-Brancher :
+## Access data from the index based on the user / agent
 
-Knowledge Base
-AI Search
+- Agent use the identity of the user to access the data from the index
+- Create a basic index to get the data from the knowledge sources
+- Connect the orchestrator agent to the agent
 
+---
 
-Implémenter :
-grounding dynamique
+## Fabric IQ
 
+- TODO
+- Connect the orchestrator agent to the Fabric IQ agent
 
+---
 
-👉 Notions :
+## Ontology
 
-Agent reasoning vs retrieval
-Hallucination control
+- Ontology
 
+---
 
-🔐 Lab 5 — Sécurité & Identity-based access ?
-🎓 Objectif
-Faire un agent context-aware selon l’utilisateur.
-Contenu
+## Fabric RTI
 
-Implémenter filtrage :
+- Realtime ingestion
 
-par utilisateur
-par groupe
+---
 
+## MCP
 
-Simulation :
-
-user A voit Finance
-user B voit RH
-
-
-# Foundry IQ vs Fabric IQ vs Foundry RTI
-
-🔗 Lab 6 — Intégration Fabric & Ontology
-🎓 Objectif
-Structurer les données intelligemment.
-Contenu
-
-Connecter Fabric IQ
-Introduire une Ontology / Semantic layer
-Mapper :
-
-données entre domaines
-
-Lab 6 - Sécurité & Identity-based access pour Fabric
-
-
-👉 Notions :
-
-Data modeling pour agents
-Alignement sémantique
-
-
-⚡ Lab 7 — Real-time (Fabric RTI)
-🎓 Objectif
-Introduire le temps réel.
-Contenu
-
-Ingestion temps réel (Fabric RTI)
-Connecter avec Foundry IQ
-Agent capable de :
-
-répondre avec données temps réel
-
-=> Scripts de maj des données Fabric RTI => Nouvelle 
-
-👉 Notions :
-
-Streaming vs batch
-Freshness des données
-
-
-🔄 Lab 8 — MCP & interop agents
-🎓 Objectif
-Brancher plusieurs systèmes ensemble.
-Contenu
-
-Introduire MCP (Model Context Protocol)
-Connecter :
-MCP Dev (Optionnel)
+MCP Dev (Optional)
 MCP Fabric => Consommer BDD / RTI / Données
 MCP Agentic 
 
-🧠 Lab 9 — Agents spécialisés & orchestration
-🎓 Objectif
-Construire un système multi-agent.
-Contenu
+---
 
-1 orchestrator
-1 agent Fabric
-1 agent Foundry
-Routing intelligent
+## Closing
+
