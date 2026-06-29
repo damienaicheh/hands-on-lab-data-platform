@@ -1,0 +1,18 @@
+[project]
+name = "src"
+version = "0.1.0"
+description = "Hands-on Lab Data Platform"
+readme = "README.md"
+requires-python = ">=3.13, <4.0.0"
+dependencies = [
+    "azure-identity==1.25.3",
+    "python-dotenv==1.2.2",
+    "agent-framework-core==1.9.0",
+    "agent-framework-devui==1.0.0b260528",
+    "agent-framework-foundry==1.8.2",
+    "agent-framework-orchestrations==1.0.0",
+    "azure-ai-projects==2.2.0",
+]
+
+[tool.uv]
+prerelease = "allow"
