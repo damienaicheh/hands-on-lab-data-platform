@@ -149,3 +149,23 @@ resource "azurerm_role_assignment" "blob_demo_search_index_data_reader_foundry" 
   role_definition_name = "Search Index Data Reader"
   principal_id         = azurerm_user_assigned_identity.this.principal_id
 }
+
+# ---- RBAC for the ADLS Gen2 storage account used by Azure AI Search -------
+
+# The AI Search system-assigned identity reads documents AND their ACL metadata
+# during indexing. Storage Blob Data Reader is sufficient (and required) for
+# native ACL ingestion on ADLS Gen2.
+resource "azurerm_role_assignment" "search_data_blob_reader_search" {
+  scope                = azurerm_storage_account.search_data.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = azapi_resource.ai_search.output.identity.principalId
+}
+
+# The deployment user (az login identity) uploads the documents and assigns the
+# POSIX ACLs from the seed script. Setting ACLs on ADLS Gen2 requires data-plane
+# ownership (Storage Blob Data Owner).
+resource "azurerm_role_assignment" "search_data_blob_owner_user" {
+  scope                = azurerm_storage_account.search_data.id
+  role_definition_name = "Storage Blob Data Owner"
+  principal_id         = data.azurerm_client_config.current.object_id
+}

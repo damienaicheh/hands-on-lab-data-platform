@@ -79,8 +79,41 @@
       "filterable": false,
       "retrievable": true,
       "stored": true
+    },
+    {
+      "name": "GroupIds",
+      "type": "Collection(Edm.String)",
+      "permissionFilter": "groupIds",
+      "filterable": true,
+      "retrievable": false,
+      "searchable": false,
+      "sortable": false,
+      "facetable": false,
+      "stored": true
+    },
+    {
+      "name": "UserIds",
+      "type": "Collection(Edm.String)",
+      "permissionFilter": "userIds",
+      "filterable": true,
+      "retrievable": false,
+      "searchable": false,
+      "sortable": false,
+      "facetable": false,
+      "stored": true
+    },
+    {
+      "name": "metadata_storage_path",
+      "type": "Edm.String",
+      "filterable": true,
+      "retrievable": false,
+      "searchable": false,
+      "sortable": false,
+      "facetable": false,
+      "stored": true
     }
   ],
+  "permissionFilterOption": "enabled",
   "semantic": {
     "defaultConfiguration": "${KS_NAME}-semantic-configuration",
     "configurations": [

@@ -46,7 +46,10 @@
           { "name": "title", "source": "/document/metadata_storage_name" },
           { "name": "header_1", "source": "/document/sections/h1" },
           { "name": "header_2", "source": "/document/sections/h2" },
-          { "name": "header_3", "source": "/document/sections/h3" }
+          { "name": "header_3", "source": "/document/sections/h3" },
+          { "name": "GroupIds", "source": "/document/metadata_group_ids" },
+          { "name": "UserIds", "source": "/document/metadata_user_ids" },
+          { "name": "metadata_storage_path", "source": "/document/metadata_storage_path" }
         ]
       }
     ],

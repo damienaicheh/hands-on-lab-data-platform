@@ -42,3 +42,24 @@ output "azure_tenant_id" {
   description = "Azure tenant ID"
   value       = data.azurerm_client_config.current.tenant_id
 }
+
+# --- Dedicated ADLS Gen2 storage account for AI Search ACL ingestion ----------
+output "search_data_storage_account_name" {
+  description = "Name of the dedicated ADLS Gen2 storage account for searchable documents"
+  value       = azurerm_storage_account.search_data.name
+}
+
+output "search_data_blob_endpoint" {
+  description = "Blob endpoint of the dedicated ADLS Gen2 storage account (BLOB_ACCOUNT_URL)"
+  value       = azurerm_storage_account.search_data.primary_blob_endpoint
+}
+
+output "search_data_dfs_endpoint" {
+  description = "DFS (Data Lake) endpoint of the dedicated ADLS Gen2 storage account"
+  value       = azurerm_storage_account.search_data.primary_dfs_endpoint
+}
+
+output "search_data_resource_id" {
+  description = "Resource ID of the dedicated ADLS Gen2 storage account (for BLOB_DATASOURCE_CONNECTION_STRING)"
+  value       = azurerm_storage_account.search_data.id
+}

@@ -2,15 +2,18 @@ import logging
 import os
 
 from agent_framework._agents import Agent
-from agent_framework.azure import AzureAISearchContextProvider
 from agent_framework_devui import serve
 from agent_framework_foundry._chat_client import FoundryChatClient
 from azure.ai.projects.aio._client import AIProjectClient
 from azure.ai.projects.models._models import PromptAgentDefinition
 from azure.identity.aio import DefaultAzureCredential
 from dotenv import load_dotenv
+from utils.identity_propagation_ai_search import (
+    IdentityAwareAzureAISearchContextProvider,
+)
 
 load_dotenv()
+
 
 credential = DefaultAzureCredential()
 
@@ -36,7 +39,7 @@ agent_detail = project.agents.create_version(
     ),
 )
 
-aisearch_context_provider = AzureAISearchContextProvider(
+aisearch_context_provider = IdentityAwareAzureAISearchContextProvider(
     source_id="search_provider",
     endpoint=os.environ["SEARCH_ENDPOINT"],
     credential=credential,

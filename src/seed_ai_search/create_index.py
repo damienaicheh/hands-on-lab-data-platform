@@ -15,21 +15,21 @@ import json
 import logging
 import os
 import re
+from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import aiohttp
 from azure.core.exceptions import HttpResponseError, ResourceExistsError
 from azure.identity.aio import DefaultAzureCredential
 from azure.search.documents.indexes.aio import SearchIndexClient, SearchIndexerClient
 from azure.search.documents.indexes.models import (
     IndexerExecutionResult,
-    SearchIndex,
     SearchIndexer,
-    SearchIndexerDataSourceConnection,
     SearchIndexerSkillset,
     SearchIndexerStatus,
 )
-from azure.storage.blob.aio import BlobServiceClient
+from azure.storage.filedatalake.aio import DataLakeServiceClient
 from dotenv import load_dotenv
 
 # Load configuration from a local ``.env`` file (when present) into
@@ -49,6 +49,8 @@ def get_required_env(name: str) -> str:
 
 
 API_VERSION = os.environ.get("API_VERSION", "2025-11-01-preview")
+# Microsoft Entra scope used to call the Azure AI Search data/management plane.
+SEARCH_TOKEN_SCOPE = "https://search.azure.com/.default"
 
 # --- Azure AI Search ---
 SEARCH_ENDPOINT = get_required_env("SEARCH_ENDPOINT")
@@ -60,6 +62,24 @@ BLOB_DATASOURCE_CONNECTION_STRING = get_required_env(
     "BLOB_DATASOURCE_CONNECTION_STRING"
 )
 LOCAL_DATA_DIR = os.environ.get("LOCAL_DATA_DIR", "documents")
+
+# --- Document-level access control (POSIX ACL ingestion) ---
+# Documents are organised in two folders that map to two Microsoft Entra groups:
+#   * ``RESTRICTED_FOLDER`` -> ``RESTRICTED_DOCS_GROUP_ID`` (a subset of
+#     participants, e.g. project managers).
+#   * every other folder    -> ``ALL_PARTICIPANTS_GROUP_ID`` (every participant).
+# The AI Search indexer computes the *effective* access of each named group by
+# walking the ADLS Gen2 hierarchy (container root -> folder -> file). A group is
+# only recorded as having access to a file when it has Execute (traverse) on
+# every parent directory AND Read on the file, so we grant ``r-x`` on the root
+# and folders and ``r--`` on the files. ADLS Gen2 has no "everyone/other" ACL
+# category that the indexer honours, which is why "public" content is expressed
+# through the all-participants group rather than an empty ACL.
+RESTRICTED_DOCS_GROUP_ID = get_required_env("RESTRICTED_DOCS_GROUP_ID")
+ALL_PARTICIPANTS_GROUP_ID = get_required_env("ALL_PARTICIPANTS_GROUP_ID")
+RESTRICTED_FOLDER = "restricted"
+# ADLS Gen2 (Data Lake) endpoint, derived from the blob endpoint.
+ADLS_ACCOUNT_URL = BLOB_ACCOUNT_URL.replace(".blob.", ".dfs.")
 
 # --- Azure OpenAI (embeddings) ---
 AOAI_ENDPOINT = get_required_env("AOAI_ENDPOINT")
@@ -127,9 +147,10 @@ async def create_search_index() -> None:
     print(f"Index          : {INDEX_NAME}")
 
     try:
-        # 1. Push the local documents to the blob container the indexer reads.
-        print("\nUploading local files to blob storage...")
-        await upload_local_files_to_blob()
+        # 1. Upload the local documents to ADLS Gen2 and apply POSIX ACLs so the
+        #    indexer can ingest per-document permissions.
+        print("\nUploading documents to ADLS Gen2 and applying ACLs...")
+        await upload_documents_and_apply_acls()
 
         # 2. Declare the four AI Search objects from the JSON templates:
         #    data source (where to read), index (target schema), skillset
@@ -155,70 +176,167 @@ async def create_search_index() -> None:
         await credential.close()
 
 
-async def upload_local_files_to_blob() -> None:
-    """Upload every file from ``LOCAL_DATA_DIR`` to the configured container.
+def _file_acl(group_id: str) -> str:
+    """Build a POSIX access ACL granting read on a file to a named group.
 
-    Files already present in the container are skipped so the script stays
-    idempotent across runs.
+    The base entries (owner / owning-group / other) are always present. A
+    ``mask`` entry is required whenever a named entry exists; it caps the
+    effective rights of the named group at read-only.
     """
-    directory_path = resolve_documents_dir()
-    if not directory_path.is_dir():
+    return f"user::rw-,group::r--,group:{group_id}:r--,mask::r--,other::---"
+
+
+def _dir_acl(group_ids: Sequence[str]) -> str:
+    """Build a POSIX access ACL granting traverse (read+execute) on a directory.
+
+    Named groups need Execute on every parent directory for the indexer to
+    resolve their effective read access on the files underneath. The ``mask`` is
+    set to ``r-x`` so the named group entries keep their read+execute rights.
+    """
+    named = ",".join(f"group:{group_id}:r-x" for group_id in group_ids)
+    return f"user::rwx,group::r-x,{named},mask::r-x,other::---"
+
+
+def _group_for_path(relative: Path) -> str:
+    """Return the Entra group allowed to read the document at ``relative``.
+
+    Files under ``RESTRICTED_FOLDER`` are limited to ``RESTRICTED_DOCS_GROUP_ID``;
+    every other file is readable by ``ALL_PARTICIPANTS_GROUP_ID`` (all
+    participants).
+    """
+    top_folder = relative.parts[0] if len(relative.parts) > 1 else ""
+    if top_folder == RESTRICTED_FOLDER:
+        return RESTRICTED_DOCS_GROUP_ID
+    return ALL_PARTICIPANTS_GROUP_ID
+
+
+async def upload_documents_and_apply_acls() -> None:
+    """Upload local documents to ADLS Gen2 and apply per-folder POSIX ACLs.
+
+    Each document is tagged with the named ACL of the Entra group allowed to
+    read it (restricted folder -> restricted group, everything else -> all
+    participants). The container root and every folder also grant those groups
+    Execute (traverse) so the Azure AI Search indexer can resolve each group's
+    *effective* read access while walking the hierarchy and write it as the
+    document's permission metadata. The search service still indexes every file
+    because it reads through its Storage Blob Data Reader role, which bypasses
+    ACLs.
+    """
+    documents_dir = resolve_documents_dir()
+    if not documents_dir.is_dir():
         raise RuntimeError(
-            f"Local data directory '{directory_path}' does not exist or is "
+            f"Local data directory '{documents_dir}' does not exist or is "
             "not a directory."
         )
 
-    async with BlobServiceClient(BLOB_ACCOUNT_URL, credential) as blob_service_client:
-        container_client = blob_service_client.get_container_client(BLOB_CONTAINER_NAME)
-        # Create the container on first run; ignore the error when it exists.
+    async with DataLakeServiceClient(ADLS_ACCOUNT_URL, credential) as service:
+        file_system = service.get_file_system_client(BLOB_CONTAINER_NAME)
         try:
-            await container_client.create_container()
-            print(f"Container '{BLOB_CONTAINER_NAME}' created.")
+            await file_system.create_file_system()
+            print(f"Filesystem '{BLOB_CONTAINER_NAME}' created.")
         except ResourceExistsError:
-            print(f"Container '{BLOB_CONTAINER_NAME}' already exists.")
+            print(f"Filesystem '{BLOB_CONTAINER_NAME}' already exists.")
 
-        # Only regular files (not sub-directories) are uploaded, in a stable order.
-        local_files = sorted(p for p in directory_path.iterdir() if p.is_file())
-        if not local_files:
-            print(f"No files found in '{directory_path}'.")
-            return
+        # Grant every group traverse (read+execute) on the container root so the
+        # indexer's hierarchical evaluation can reach the files in each subtree.
+        root_directory = file_system._get_root_directory_client()
+        await root_directory.set_access_control(
+            acl=_dir_acl([ALL_PARTICIPANTS_GROUP_ID, RESTRICTED_DOCS_GROUP_ID])
+        )
+        print("  - root '/' ACL set (traverse for all groups)")
 
-        # Fetch the blobs already present once, to skip re-uploads and keep the
-        # script idempotent across runs.
-        existing_blobs = {blob.name async for blob in container_client.list_blobs()}
-
+        created_dirs: set[str] = set()
+        local_files = sorted(p for p in documents_dir.rglob("*") if p.is_file())
         for file_path in local_files:
-            name = file_path.name
-            if name in existing_blobs:
-                print(f"  - skipped (already exists): {name}")
-                continue
-            # ``overwrite=False`` is a safety net: existing blobs are already
-            # filtered out, so a clash still raises instead of replacing data.
-            with file_path.open("rb") as data:
-                await container_client.get_blob_client(name).upload_blob(
-                    data, overwrite=False
-                )
-            print(f"  - uploaded: {name}")
+            relative = file_path.relative_to(documents_dir)
+            relative_posix = relative.as_posix()
+            group_id = _group_for_path(relative)
+
+            # Recreate the parent directory hierarchy (HNS requires it before a
+            # file can be created at a nested path) and grant the document's
+            # group traverse on that directory.
+            parent = relative.parent.as_posix()
+            if parent not in (".", "") and parent not in created_dirs:
+                directory_client = file_system.get_directory_client(parent)
+                try:
+                    await directory_client.create_directory()
+                except ResourceExistsError:
+                    pass
+                await directory_client.set_access_control(acl=_dir_acl([group_id]))
+                created_dirs.add(parent)
+
+            file_client = file_system.get_file_client(relative_posix)
+            # ``overwrite=True`` is required: with ``overwrite=False`` the SDK
+            # skips the create call and appends to a non-existent path. Re-seeding
+            # simply overwrites the file content, which is idempotent.
+            await file_client.upload_data(file_path.read_bytes(), overwrite=True)
+            await file_client.set_access_control(acl=_file_acl(group_id))
+            print(f"  - uploaded: {relative_posix} -> group {group_id}")
 
 
 # The four ``apply_*`` helpers each load a JSON template from ``data/``, fill in
 # its ${VAR} placeholders and create-or-update the matching AI Search object.
 # They are idempotent: running them again simply updates the existing object.
+#
+# The data source and index are sent with a raw REST PUT because they carry
+# preview-only keys (``indexerPermissionOptions``, ``permissionFilter``,
+# ``permissionFilterOption``) that the stable SDK models silently drop.
+async def _search_rest_put(resource_path: str, body: dict, *, query: str = "") -> None:
+    """PUT a JSON object to the Azure AI Search management plane via REST."""
+    token = (await credential.get_token(SEARCH_TOKEN_SCOPE)).token
+    url = f"{SEARCH_ENDPOINT}/{resource_path}?api-version={API_VERSION}{query}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.put(url, headers=headers, json=body) as response:
+            if response.status not in (200, 201, 204):
+                detail = await response.text()
+                raise RuntimeError(
+                    f"PUT {resource_path} failed with HTTP {response.status}: {detail}"
+                )
+
+
+async def _search_rest_delete(resource_path: str) -> None:
+    """DELETE an Azure AI Search object via REST (ignores 404)."""
+    token = (await credential.get_token(SEARCH_TOKEN_SCOPE)).token
+    url = f"{SEARCH_ENDPOINT}/{resource_path}?api-version={API_VERSION}"
+    headers = {"Authorization": f"Bearer {token}"}
+    async with aiohttp.ClientSession() as session:
+        async with session.delete(url, headers=headers) as response:
+            if response.status not in (204, 404):
+                detail = await response.text()
+                raise RuntimeError(
+                    f"DELETE {resource_path} failed with HTTP "
+                    f"{response.status}: {detail}"
+                )
+
+
 async def apply_data_source() -> None:
-    """Render the data source template and create/update it via the SDK."""
-    # The data source tells the indexer which storage account/container to read.
+    """Render the data source template and create/update it via REST."""
+    # The data source tells the indexer which ADLS Gen2 account/container to read
+    # and that it must ingest user/group permission metadata. The data source
+    # ``type`` is immutable, so an existing ``azureblob`` data source must be
+    # deleted before it can be recreated as ``adlsgen2``. The indexer is deleted
+    # first because it holds change-tracking state tied to the old data source
+    # (it is recreated from its template by ``apply_indexer``).
+    await _search_rest_delete(f"indexers/{INDEXER_NAME}")
+    await _search_rest_delete(f"datasources/{DATA_SOURCE_NAME}")
     body = render_template("blob-datasource.json")
-    await indexer_client.create_or_update_data_source_connection(
-        SearchIndexerDataSourceConnection(body)
-    )
+    await _search_rest_put(f"datasources/{DATA_SOURCE_NAME}", body)
     print(f"datasources/{DATA_SOURCE_NAME} updated.")
 
 
 async def apply_index() -> None:
-    """Render the index template and create/update it via the SDK."""
-    # The index defines the target schema (fields, vector + semantic config).
+    """Render the index template and create/update it via REST."""
+    # The index defines the target schema (fields, vector + semantic config) plus
+    # the permission filter fields. ``allowIndexDowntime`` lets the permission
+    # settings be enabled on an existing index.
     body = render_template("blob-index.json")
-    await index_client.create_or_update_index(SearchIndex(body))
+    await _search_rest_put(
+        f"indexes/{INDEX_NAME}", body, query="&allowIndexDowntime=true"
+    )
     print(f"indexes/{INDEX_NAME} updated.")
 
 
