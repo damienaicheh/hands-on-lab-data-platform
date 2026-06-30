@@ -1,0 +1,11 @@
+{
+  "name": "${KS_NAME}-datasource",
+  "description": "Azure Blob data source for knowledge source '${KS_NAME}'",
+  "type": "azureblob",
+  "credentials": {
+    "connectionString": "${BLOB_DATASOURCE_CONNECTION_STRING}"
+  },
+  "container": {
+    "name": "${BLOB_CONTAINER_NAME}"
+  }
+}

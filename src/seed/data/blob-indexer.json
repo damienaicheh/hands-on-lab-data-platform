@@ -1,0 +1,19 @@
+{
+  "name": "${KS_NAME}-indexer",
+  "description": "Markdown indexer with embeddings for knowledge source '${KS_NAME}'",
+  "dataSourceName": "${KS_NAME}-datasource",
+  "skillsetName": "${KS_NAME}-skillset",
+  "targetIndexName": "${KS_NAME}-index",
+  "disabled": false,
+  "parameters": {
+    "batchSize": 1,
+    "maxFailedItems": -1,
+    "maxFailedItemsPerBatch": -1,
+    "configuration": {
+      "parsingMode": "markdown",
+      "markdownParsingSubmode": "oneToMany",
+      "markdownHeaderDepth": "h3"
+    }
+  },
+  "fieldMappings": []
+}
