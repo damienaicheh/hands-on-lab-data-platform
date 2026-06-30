@@ -30,20 +30,20 @@ def get_required_env(name: str) -> str:
 
 API_VERSION = os.environ.get("API_VERSION", "2025-11-01-preview")
 
-# --- Azure AI Search (index produced by seed/create_index.py) ---
+# --- Azure AI Search (index produced by seed_ai_search/create_index.py) ---
 SEARCH_ENDPOINT = get_required_env("SEARCH_ENDPOINT")
 
 # --- Foundry IQ (knowledge base chat model) ---
 FOUNDRY_ENDPOINT = get_required_env("FOUNDRY_ENDPOINT")
 CHAT_MODEL_DEPLOYMENT = get_required_env("CHAT_MODEL_DEPLOYMENT")
 
-# --- Object names (kept in sync with seed/create_index.py via the env vars) ---
-BLOB_KNOWLEDGE_SOURCE_NAME = get_required_env("BLOB_KNOWLEDGE_SOURCE_NAME")
+# --- Object names (kept in sync with seed_ai_search/create_index.py via the env vars) ---
+AI_SEARCH_KNOWLEDGE_BASE_NAME = get_required_env("AI_SEARCH_KNOWLEDGE_BASE_NAME")
 WEB_KNOWLEDGE_SOURCE_NAME = get_required_env("WEB_KNOWLEDGE_SOURCE_NAME")
-KNOWLEDGE_BASE_NAME = get_required_env("BLOB_KNOWLEDGE_BASE_NAME")
+KNOWLEDGE_BASE_NAME = get_required_env("KNOWLEDGE_BASE_NAME")
 
-INDEX_NAME = f"{BLOB_KNOWLEDGE_SOURCE_NAME}-index"
-SEMANTIC_CONFIGURATION_NAME = f"{BLOB_KNOWLEDGE_SOURCE_NAME}-semantic-configuration"
+INDEX_NAME = f"{AI_SEARCH_KNOWLEDGE_BASE_NAME}-index"
+SEMANTIC_CONFIGURATION_NAME = f"{AI_SEARCH_KNOWLEDGE_BASE_NAME}-semantic-configuration"
 
 
 def create_web_knowledge_source(index_client: SearchIndexClient) -> None:
@@ -75,7 +75,7 @@ def create_index_knowledge_source(index_client: SearchIndexClient) -> None:
     """Create the searchIndex knowledge source backed by the built index."""
     knowledge_source = SearchIndexKnowledgeSource(
         {
-            "name": BLOB_KNOWLEDGE_SOURCE_NAME,
+            "name": AI_SEARCH_KNOWLEDGE_BASE_NAME,
             "kind": "searchIndex",
             "description": (
                 f"Knowledge source backed by the '{INDEX_NAME}' Azure AI Search index."
@@ -90,7 +90,7 @@ def create_index_knowledge_source(index_client: SearchIndexClient) -> None:
     )
 
     index_client.create_or_update_knowledge_source(knowledge_source)
-    logger.info(f"Knowledge source '{BLOB_KNOWLEDGE_SOURCE_NAME}' ready.")
+    logger.info(f"Knowledge source '{AI_SEARCH_KNOWLEDGE_BASE_NAME}' ready.")
 
 
 def create_knowledge_base(index_client: SearchIndexClient) -> KnowledgeBase:
@@ -103,7 +103,7 @@ def create_knowledge_base(index_client: SearchIndexClient) -> KnowledgeBase:
             ),
             "knowledgeSources": [
                 {"name": WEB_KNOWLEDGE_SOURCE_NAME},
-                {"name": BLOB_KNOWLEDGE_SOURCE_NAME},
+                {"name": AI_SEARCH_KNOWLEDGE_BASE_NAME},
             ],
             "outputMode": "answerSynthesis",
             "answerInstructions": (
@@ -132,7 +132,7 @@ def create_knowledge_base(index_client: SearchIndexClient) -> KnowledgeBase:
 def main() -> None:
     """Build the Foundry IQ knowledge base over the existing AI Search index.
 
-    The Azure AI Search index itself is created by ``seed/create_index.py``,
+    The Azure AI Search index itself is created by ``seed_ai_search/create_index.py``,
     which is run separately at startup. Here we only wire that index up as a
     knowledge source and knowledge base, reading its configuration from the
     same environment variables.
@@ -149,7 +149,7 @@ def main() -> None:
     logger.info(f"\nCreating knowledge source '{WEB_KNOWLEDGE_SOURCE_NAME}'...")
     create_web_knowledge_source(index_client)
 
-    logger.info(f"\nCreating knowledge source '{BLOB_KNOWLEDGE_SOURCE_NAME}'...")
+    logger.info(f"\nCreating knowledge source '{AI_SEARCH_KNOWLEDGE_BASE_NAME}'...")
     create_index_knowledge_source(index_client)
 
     logger.info(f"Creating knowledge base '{KNOWLEDGE_BASE_NAME}'...")

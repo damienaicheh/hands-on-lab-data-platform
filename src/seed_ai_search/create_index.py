@@ -4,12 +4,10 @@ This module owns everything related to building the Azure AI Search index:
 blob upload, data source, index, skillset and indexer creation, plus running
 and polling the indexer. Run it once at startup to seed the data and index::
 
-    python -m seed.create_index
-    # or
-    python seed/create_index.py
+    uv run python create_index.py
 
-``main.py`` does not import from this module; it consumes the resulting index
-through the same environment variables.
+The ``agents`` project does not import from this module; it consumes the
+resulting index through the same environment variables.
 """
 
 import asyncio
@@ -69,7 +67,7 @@ EMBEDDING_DEPLOYMENT = get_required_env("EMBEDDING_DEPLOYMENT")
 EMBEDDING_DIMENSIONS = int(os.environ.get("EMBEDDING_DIMENSIONS", "3072"))
 
 # --- Object names ---
-KNOWLEDGE_SOURCE_NAME = get_required_env("BLOB_KNOWLEDGE_SOURCE_NAME")
+KNOWLEDGE_SOURCE_NAME = get_required_env("AI_SEARCH_KNOWLEDGE_BASE_NAME")
 
 DATA_SOURCE_NAME = f"{KNOWLEDGE_SOURCE_NAME}-datasource"
 INDEX_NAME = f"{KNOWLEDGE_SOURCE_NAME}-index"
@@ -380,10 +378,10 @@ def render_template(template_file: str) -> dict:
 
 
 def resolve_documents_dir() -> Path:
-    """Resolve ``LOCAL_DATA_DIR`` to an absolute path (relative to ``src``)."""
+    """Resolve ``LOCAL_DATA_DIR`` to an absolute path (relative to this script)."""
     path = Path(LOCAL_DATA_DIR)
     if not path.is_absolute():
-        path = Path(__file__).resolve().parent.parent / path
+        path = Path(__file__).resolve().parent / path
     return path.resolve()
 
 
