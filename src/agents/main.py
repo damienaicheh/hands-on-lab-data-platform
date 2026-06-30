@@ -29,11 +29,14 @@ agent_detail = project.agents.create_version(
     agent_name="Orchestrator",
     definition=PromptAgentDefinition(
         model=foundry_client.model,
-        instructions="You are an orchestrator agent that can call other agents to answer questions. You have access to the following agents: \n\n- Search Agent: Can answer questions about the data in the Azure AI Search index.\n- Web Agent: Can answer questions about the data in the web knowledge source.\n\nWhen you receive a question, you should determine which agent is best suited to answer it and call that agent. If you need to call multiple agents, you can do so in sequence and combine their answers.",
+        instructions="""
+                You are a helpful assistant with advanced reasoning capabilities.
+                You must only use the provided context from the knowledge base to answer the questions.
+            """,
     ),
 )
 
-AzureAISearchContextProvider(
+aisearch_context_provider = AzureAISearchContextProvider(
     source_id="search_provider",
     endpoint=os.environ["SEARCH_ENDPOINT"],
     credential=credential,
@@ -42,13 +45,14 @@ AzureAISearchContextProvider(
     # Optional: Configure retrieval behavior. "answer_synthesis" output mode and
     # "medium"/"low" reasoning effort require the preview build of azure-search-documents
     # (`pip install --pre azure-search-documents`); the provider auto-detects the build.
-    knowledge_base_output_mode="extractive_data",  # or "answer_synthesis" (preview build only)
-    retrieval_reasoning_effort="minimal",  # or "medium", "low" (preview build only)
+    knowledge_base_output_mode="answer_synthesis",  # or "answer_synthesis" (preview build only)
+    retrieval_reasoning_effort="low",  # or "medium", "low" (preview build only)
 )
 
 orchestrator_agent = Agent(
     name="Orchestrator",
     client=foundry_client,
+    context_providers=[aisearch_context_provider],
 )
 
 
