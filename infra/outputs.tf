@@ -3,9 +3,14 @@ output "project_endpoint" {
   value       = azapi_resource.ms_foundry_project.output.properties.endpoints["AI Foundry API"]
 }
 
-output "model_deployment" {
+output "chat_model_deployment" {
   description = "Chat model deployment name"
   value       = azurerm_cognitive_deployment.msfoundry_chat_deployment_model.name
+}
+
+output "advanced_chat_model_deployment" {
+  description = "Advanced chat model deployment name"
+  value       = azurerm_cognitive_deployment.msfoundry_advanced_chat_deployment_model.name
 }
 
 output "embedding_deployment" {
