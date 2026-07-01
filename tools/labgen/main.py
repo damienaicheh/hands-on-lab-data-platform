@@ -277,7 +277,11 @@ def is_text_file(path: Path) -> bool:
 def glob_match(path: str, pattern: str) -> bool:
     normalized_path = path.replace("\\", "/")
     normalized_pattern = pattern.replace("\\", "/")
-    regex = "^" + re.escape(normalized_pattern).replace(r"\*\*", ".*").replace(r"\*", "[^/]*") + "$"
+    escaped = re.escape(normalized_pattern)
+    escaped = escaped.replace(r"\*\*", "__DOUBLE_WILDCARD__")
+    escaped = escaped.replace(r"\*", "[^/]*")
+    escaped = escaped.replace("__DOUBLE_WILDCARD__", ".*")
+    regex = f"^{escaped}$"
     return re.match(regex, normalized_path, re.IGNORECASE) is not None
 
 

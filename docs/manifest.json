@@ -16,8 +16,6 @@
   "labs": [
     {
       "id": "1",
-      "title": "Foundry IQ Managed",
-      "description": "Create knowledge sources and agent capabilities for the workshop.",
       "markdown": "docs/workshop.md"
     }
   ]

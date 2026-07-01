@@ -1,6 +1,6 @@
 import unittest
 
-from tools.labgen.main import LabMarkerProcessor
+from tools.labgen.main import LabMarkerProcessor, glob_match
 
 
 class LabMarkerProcessorTests(unittest.TestCase):
@@ -33,6 +33,11 @@ class LabMarkerProcessorTests(unittest.TestCase):
         transformed = LabMarkerProcessor.transform(source, "2", "starter", {"1": 0, "2": 1})
 
         self.assertEqual("solution_line\nnext_starter\n", transformed)
+
+    def test_glob_match_supports_double_wildcard(self) -> None:
+        self.assertTrue(glob_match("src/agents/main.py", "src/**"))
+        self.assertTrue(glob_match("src/agents/main.py", "src/**/*.py"))
+        self.assertFalse(glob_match("infra/main.tf", "src/**"))
 
 
 if __name__ == "__main__":
