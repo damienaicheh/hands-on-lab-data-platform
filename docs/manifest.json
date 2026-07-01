@@ -1,0 +1,24 @@
+{
+  "outputRoot": "generated/labs",
+  "include": [
+    "README.md",
+    "docs/**",
+    "infra/**",
+    "solutions/**",
+    "src/**"
+  ],
+  "exclude": [
+    "**/.venv/**",
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "generated/labs/**"
+  ],
+  "labs": [
+    {
+      "id": "1",
+      "title": "Foundry IQ Managed",
+      "description": "Create knowledge sources and agent capabilities for the workshop.",
+      "markdown": "docs/workshop.md"
+    }
+  ]
+}
