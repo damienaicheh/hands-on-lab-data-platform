@@ -111,7 +111,7 @@ class LabMarkerProcessor:
 
             depth -= 1
 
-        raise ValueError(f"Missing closing lab marker for lab '{block_lab_id}'.")
+        raise ValueError(f"Missing closing lab marker for block '{block_lab_id}'.")
 
     @staticmethod
     def _resolve_state(block_lab_id: str, target_lab_index: int, target_variant: str, lab_order: dict[str, int]) -> str:
@@ -269,7 +269,6 @@ def is_text_file(path: Path) -> bool:
         ".xml",
         ".toml",
         ".txt",
-        ".lock",
         ".sh",
     }
 
