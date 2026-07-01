@@ -8,6 +8,7 @@ from azure.ai.projects.aio._client import AIProjectClient
 from azure.ai.projects.models._models import PromptAgentDefinition
 from azure.identity.aio import DefaultAzureCredential
 from dotenv import load_dotenv
+
 from utils.identity_propagation_ai_search import (
     IdentityAwareAzureAISearchContextProvider,
 )
@@ -35,8 +36,13 @@ agent_detail = project.agents.create_version(
         instructions="""
                 You are a helpful assistant with advanced reasoning capabilities.
                 You must only use the provided context from the knowledge base to answer the questions.
+                IMPORTANT: You MUST search for guidelines BEFORE creating any product or sales report.
             """,
     ),
+)
+
+company_guidelines_tool = foundry_client.get_file_search_tool(
+    vector_store_ids=[os.environ["VECTOR_STORE_ID"]]
 )
 
 aisearch_context_provider = IdentityAwareAzureAISearchContextProvider(
@@ -56,6 +62,7 @@ orchestrator_agent = Agent(
     name="Orchestrator",
     client=foundry_client,
     context_providers=[aisearch_context_provider],
+    tools=[company_guidelines_tool],
 )
 
 
