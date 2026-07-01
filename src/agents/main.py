@@ -1,11 +1,12 @@
+import asyncio
 import logging
 import os
 
 from agent_framework._agents import Agent
 from agent_framework_devui import serve
 from agent_framework_foundry._chat_client import FoundryChatClient
-from azure.ai.projects.aio._client import AIProjectClient
-from azure.ai.projects.models._models import PromptAgentDefinition
+from azure.ai.projects.aio import AIProjectClient
+from azure.ai.projects.models import PromptAgentDefinition
 from azure.identity.aio import DefaultAzureCredential
 from dotenv import load_dotenv
 
@@ -13,74 +14,89 @@ from utils.identity_propagation_ai_search import (
     IdentityAwareAzureAISearchContextProvider,
 )
 
-load_dotenv()
-
-
-credential = DefaultAzureCredential()
-
-project = AIProjectClient(
-    endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
-    credential=credential,
-)
-
-foundry_client = FoundryChatClient(
-    project_endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
-    model=os.environ["ADVANCED_CHAT_MODEL_DEPLOYMENT"],
-    credential=credential,
-)
-
-agent_detail = project.agents.create_version(
-    agent_name="Orchestrator",
-    definition=PromptAgentDefinition(
-        model=foundry_client.model,
-        instructions="""
-                You are a helpful assistant with advanced reasoning capabilities.
-                You must only use the provided context from the knowledge base to answer the questions.
-                IMPORTANT: You MUST search for guidelines BEFORE creating any product or sales report.
-            """,
-    ),
-)
-
-company_guidelines_tool = foundry_client.get_file_search_tool(
-    vector_store_ids=[os.environ["VECTOR_STORE_ID"]]
-)
-
-aisearch_context_provider = IdentityAwareAzureAISearchContextProvider(
-    source_id="search_provider",
-    endpoint=os.environ["SEARCH_ENDPOINT"],
-    credential=credential,
-    mode="agentic",
-    knowledge_base_name=os.environ["KNOWLEDGE_BASE_NAME"],
-    # Optional: Configure retrieval behavior. "answer_synthesis" output mode and
-    # "medium"/"low" reasoning effort require the preview build of azure-search-documents
-    # (`pip install --pre azure-search-documents`); the provider auto-detects the build.
-    knowledge_base_output_mode="answer_synthesis",  # or "answer_synthesis" (preview build only)
-    retrieval_reasoning_effort="low",  # or "medium", "low" (preview build only)
-)
-
-orchestrator_agent = Agent(
-    name="Orchestrator",
-    client=foundry_client,
-    context_providers=[aisearch_context_provider],
-    tools=[company_guidelines_tool],
-)
-
 
 def main() -> None:
-
+    load_dotenv()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     logger = logging.getLogger(__name__)
 
-    logger.info("Starting Foundry Agents with DevUI...")
+    project_endpoint = os.environ["FOUNDRY_PROJECT_ENDPOINT"]
+    model_deployment = os.environ["ADVANCED_CHAT_MODEL_DEPLOYMENT"]
+    vector_store_id = os.environ["VECTOR_STORE_ID"]
+    search_endpoint = os.environ["SEARCH_ENDPOINT"]
+    knowledge_base_name = os.environ["KNOWLEDGE_BASE_NAME"]
 
-    serve(
-        entities=[
-            orchestrator_agent,
-        ],
-        port=8090,
-        auth_enabled=False,
-        auto_open=True,
-    )
+    credential = DefaultAzureCredential()
+
+    async def register_agent_version() -> tuple[str, str]:
+        async with AIProjectClient(
+            endpoint=project_endpoint,
+            credential=credential,
+        ) as project:
+            agent_detail = await project.agents.create_version(
+                agent_name="Orchestrator",
+                definition=PromptAgentDefinition(
+                    model=model_deployment,
+                    instructions="""
+                            You are a helpful assistant with advanced reasoning capabilities.
+                            You must only use the provided context from the knowledge base to answer the questions.
+                            IMPORTANT: You MUST search for guidelines BEFORE creating any product or sales report.
+                        """,
+                ),
+            )
+            return (
+                getattr(agent_detail, "name", "Orchestrator"),
+                str(getattr(agent_detail, "version", "unknown")),
+            )
+
+    try:
+        logger.info("Ensuring Orchestrator agent is registered in Foundry...")
+        agent_name, agent_version = asyncio.run(register_agent_version())
+        logger.info(
+            "Foundry agent version created: %s (version %s)",
+            agent_name,
+            agent_version,
+        )
+
+        foundry_client = FoundryChatClient(
+            project_endpoint=project_endpoint,
+            model=model_deployment,
+            credential=credential,
+        )
+
+        company_guidelines_tool = foundry_client.get_file_search_tool(
+            vector_store_ids=[vector_store_id]
+        )
+
+        aisearch_context_provider = IdentityAwareAzureAISearchContextProvider(
+            source_id="search_provider",
+            endpoint=search_endpoint,
+            credential=credential,
+            mode="agentic",
+            knowledge_base_name=knowledge_base_name,
+            knowledge_base_output_mode="answer_synthesis",
+            retrieval_reasoning_effort="low",
+        )
+
+        orchestrator_agent = Agent(
+            name=agent_name,
+            client=foundry_client,
+            context_providers=[aisearch_context_provider],
+            tools=[company_guidelines_tool],
+        )
+
+        logger.info("Starting Foundry Agents with DevUI...")
+
+        serve(
+            entities=[
+                orchestrator_agent,
+            ],
+            port=8090,
+            auth_enabled=False,
+            auto_open=True,
+        )
+    finally:
+        asyncio.run(credential.close())
 
 
 if __name__ == "__main__":
