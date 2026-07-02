@@ -1,0 +1,18 @@
+{
+  "outputRoot": "generated_labs",
+  "include": [
+    "README.md",
+    ".vscode/**",
+    "infra/**",
+    "src/**",
+    ".gitignore",
+    ".gitattributes",
+    "LICENSE"
+  ],
+  "exclude": [
+    "**/.venv/**",
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "generated_labs/**"
+  ]
+}

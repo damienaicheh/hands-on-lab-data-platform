@@ -1,0 +1,53 @@
+name: Build Starter Lab
+
+on:
+  workflow_dispatch:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-starter:
+    name: Generate starter lab
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
+
+      - name: Generate lab 1
+        run: python -m tools.labgen generate
+
+      - name: Rename generated lab to starter
+        run: |
+          mv generated_labs/1 starter
+
+      - name: Zip starter lab
+        run: |
+          zip -r starter.zip starter
+
+      - name: Publish starter release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="starter-${{ github.run_number }}"
+
+          gh release delete "${tag}" --cleanup-tag --yes
+
+          gh release create "${tag}" starter.zip \
+            --target "${GITHUB_SHA}" \
+            --title "Starter Lab" \
+            --notes "Starter lab generated from lab 1 for commit ${GITHUB_SHA}." \
+            --latest
