@@ -58,16 +58,28 @@ def main() -> None:
             agent_version,
         )
 
+        # <lab id="1">
+        #|# TODO: create the Foundry chat client (Lab 1).
         foundry_client = FoundryChatClient(
             project_endpoint=project_endpoint,
             model=model_deployment,
             credential=credential,
         )
+        # </lab>
 
+        # <lab id="1">
+        #|# TODO: create the file-search tool for the company guidelines (Lab 1).
         company_guidelines_tool = foundry_client.get_file_search_tool(
             vector_store_ids=[vector_store_id]
         )
+        # </lab>
 
+        # The orchestrator starts with the guidelines tool only. Lab 4 adds the
+        # identity-aware Azure AI Search retrieval below.
+        context_providers = []
+
+        # <lab id="4">
+        #|# TODO: create the identity-aware Azure AI Search context provider (Lab 4).
         aisearch_context_provider = IdentityAwareAzureAISearchContextProvider(
             source_id="search_provider",
             endpoint=search_endpoint,
@@ -77,13 +89,18 @@ def main() -> None:
             knowledge_base_output_mode="answer_synthesis",
             retrieval_reasoning_effort="low",
         )
+        context_providers = [aisearch_context_provider]
+        # </lab>
 
+        # <lab id="1">
+        #|# TODO: wire the orchestrator agent with the guidelines tool (Lab 1).
         orchestrator_agent = Agent(
             name=agent_name,
             client=foundry_client,
-            context_providers=[aisearch_context_provider],
+            context_providers=context_providers,
             tools=[company_guidelines_tool],
         )
+        # </lab>
 
         logger.info("Starting Foundry Agents with DevUI...")
 

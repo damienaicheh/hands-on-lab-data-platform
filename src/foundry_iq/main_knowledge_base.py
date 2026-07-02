@@ -47,6 +47,8 @@ SEMANTIC_CONFIGURATION_NAME = f"{AI_SEARCH_KNOWLEDGE_BASE_NAME}-semantic-configu
 
 
 def create_web_knowledge_source(index_client: SearchIndexClient) -> None:
+    # <lab id="2">
+    #|raise NotImplementedError("Lab 2: define and register the web knowledge source.")
     knowledge_source = WebKnowledgeSource(
         name=WEB_KNOWLEDGE_SOURCE_NAME,
         description="A sample Web Knowledge Source.",
@@ -69,10 +71,13 @@ def create_web_knowledge_source(index_client: SearchIndexClient) -> None:
     logger.info(
         f"Knowledge source '{knowledge_source.name}' created or updated successfully."
     )
+    # </lab>
 
 
 def create_index_knowledge_source(index_client: SearchIndexClient) -> None:
     """Create the searchIndex knowledge source backed by the built index."""
+    # <lab id="2">
+    #|# TODO: define and register the search-index knowledge source (Lab 2).
     knowledge_source = SearchIndexKnowledgeSource(
         {
             "name": AI_SEARCH_KNOWLEDGE_BASE_NAME,
@@ -91,10 +96,13 @@ def create_index_knowledge_source(index_client: SearchIndexClient) -> None:
 
     index_client.create_or_update_knowledge_source(knowledge_source)
     logger.info(f"Knowledge source '{AI_SEARCH_KNOWLEDGE_BASE_NAME}' ready.")
+    # </lab>
 
 
 def create_knowledge_base(index_client: SearchIndexClient) -> KnowledgeBase:
     """Create the Foundry IQ knowledge base over the search-index source."""
+    # <lab id="3">
+    #|# TODO: define and create the Foundry IQ knowledge base (Lab 3).
     knowledge_base = KnowledgeBase(
         {
             "name": KNOWLEDGE_BASE_NAME,
@@ -127,6 +135,7 @@ def create_knowledge_base(index_client: SearchIndexClient) -> KnowledgeBase:
     result = index_client.create_or_update_knowledge_base(knowledge_base)
     logger.info(f"Knowledge base '{KNOWLEDGE_BASE_NAME}' ready.")
     return result
+    # </lab>
 
 
 def main() -> None:
