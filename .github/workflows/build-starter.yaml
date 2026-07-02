@@ -5,6 +5,8 @@ on:
     branches:
       - main
   push:
+    branches:
+      - main
     paths:
       - 'src/**'
 
@@ -21,7 +23,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Python
-      - uses: actions/setup-python@v6
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13' 
 
