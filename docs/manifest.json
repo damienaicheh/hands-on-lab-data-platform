@@ -1,22 +1,18 @@
 {
-  "outputRoot": "generated/labs",
+  "outputRoot": "generated_labs",
   "include": [
     "README.md",
-    "docs/**",
+    ".vscode/**",
     "infra/**",
-    "solutions/**",
-    "src/**"
+    "src/**",
+    ".gitignore",
+    ".gitattributes",
+    "LICENSE"
   ],
   "exclude": [
     "**/.venv/**",
     "**/__pycache__/**",
     "**/*.pyc",
-    "generated/labs/**"
-  ],
-  "labs": [
-    {
-      "id": "1",
-      "markdown": "docs/workshop.md"
-    }
+    "generated_labs/**"
   ]
 }

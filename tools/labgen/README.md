@@ -8,6 +8,20 @@ LabGen creates workshop starter snapshots from a single maintained source tree.
 python -m tools.labgen list
 python -m tools.labgen generate
 python -m tools.labgen generate --lab 1
+python -m tools.labgen --verbose list
+```
+
+When `--verbose` is enabled, LabGen emits structured JSON logs to `stderr` for easier diagnostics and CI parsing.
+
+## Manifest Notes
+
+The `labs` section is optional.
+If omitted (or empty), LabGen uses a default lab list equivalent to:
+
+```json
+"labs": [
+	{ "id": "1" }
+]
 ```
 
 ## Marker format (Python)
