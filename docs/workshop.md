@@ -14,7 +14,7 @@ contacts: # Required. Must match the number of authors
   - "@viguyonv"
 duration_minutes: 300
 tags: microsoft foundry, fabric, foundry iq, fabric iq, agent framework, mcp, ai search, foundry iq, dev-ui, csu, codespace, devcontainer
-navigation_levels: 3
+navigation_levels: 2
 banner_url: assets/banner.jpg
 audience: developers, architects, AI engineers
 
@@ -249,36 +249,42 @@ Select the **Foundry Project** resource, then open it in the [Go to Foundry port
 
 #### From the Storage Account
 
-Select the ADLS Gen2 **Storage account** in the resource group.
+Select the ADLS Gen2 **Storage account** starting with the prefix `stsearch` in the resource group.
 
-- On **Endpoints** (or **Overview**), copy the **Blob service** URL (`https://<account>.blob.core.windows.net`) into `BLOB_ACCOUNT_URL`.
-- On **Properties**, copy the storage account **Resource ID** and wrap it as `ResourceId=<id>;` in `BLOB_DATASOURCE_CONNECTION_STRING`.
+- Inside the **Endpoints** tab, copy the **Blob service** URL (`https://<account>.blob.core.windows.net`) into `BLOB_ACCOUNT_URL`.
+- Inside **Overview** on top right click on **Json View**, copy the storage account **Resource ID** and wrap it as `ResourceId=<id>;` in `BLOB_DATASOURCE_CONNECTION_STRING`.
 
 #### From Microsoft Entra ID
 
-In the portal, search for **Microsoft Entra ID** and open **Groups**. Find the two workshop security groups, open each one, and copy its **Object ID** into `RESTRICTED_DOCS_GROUP_ID` (the restricted-documents group) and `ALL_PARTICIPANTS_GROUP_ID` (the all-participants group). If you did not create these groups yourself, ask whoever provisioned the workshop for their ids.
+For the purpose of the labs, you will need 2 groups, one to represent all participants and one to represent the restricted documents. You can create them yourself or ask whoever provisioned the workshop to create them for you.
 
-<div class="tip" data-title="Values you can leave as they are">
+If you need to create them yourself, follow these steps:
 
-> Some entries already ship with a sensible default in the template, such as `API_VERSION`, the knowledge source and base names, `BLOB_CONTAINER_NAME`, and the indexer polling settings. You can keep them untouched.
+```bash
+az ad group create --display-name "Contoso-RestrictedDocs" --mail-nickname "contoso-restricteddocs"
+```
 
-</div>
+Add yourself as a user to the Entra ID group
 
-<div class="tip" data-title="Fill the rest along the labs">
+```bash
+az ad group member add --group "<group-id>" --member-id "<user-object-id>"
+```
 
-> Keep `src/.env` open while you work. Whenever a lab produces a new value, such as the vector store id in Lab 1, add it here so the next labs can read it.
+When you are done, you should have two groups in your Entra ID, one for all participants and one for the restricted documents.
 
-</div>
+In the portal, search for **Microsoft Entra ID** and open **Groups**. Find your 2 groups, open each one, and copy its **Object ID** into `RESTRICTED_DOCS_GROUP_ID` (the restricted-documents group) and `ALL_PARTICIPANTS_GROUP_ID` (the all-participants group) inside your `.env` file.
 
----
+### Seed the Azure AI Search index
 
-## Seed the Azure AI Search index
-
-Before touching any lab, you need data to work with. The workshop ships a ready-to-run script that uploads the sample documents to storage and builds the Azure AI Search index the agent will query later, including the document-level access rules. Every lab relies on this index, so you have to run it first, otherwise none of the labs can work.
+Before touching any lab, you need data to work with. The workshop ships a ready-to-run script that uploads the sample documents to storage and builds the Azure AI Search index the agent will query later, including the document-level access rules.
 
 ```bash
 cd src/seed_ai_search
+# Get the project dependencies and create a virtual environment
 uv sync
+# Activate the virtual environment
+source .venv/bin/activate
+# Run the script to upload the documents and create the index
 uv run python main_create_index.py
 ```
 
@@ -286,7 +292,7 @@ uv run python main_create_index.py
 
 <div class="task" data-title="Validation">
 
-> Wait for the script to report that the indexer has finished. In the Azure portal, open the Search service, go to **Indexes**, and confirm the index now contains documents.
+> Wait for the script to report that the indexer has finished. In the Azure portal, inside your resource group, open the Search service, go to **Indexes**, and confirm the index appeated with few documents in it.
 
 </div>
 
@@ -294,7 +300,7 @@ uv run python main_create_index.py
 
 ## Foundry IQ Managed
 
-In this lab, you create a managed vector store in Foundry IQ. A vector store is what lets the orchestrator agent search the company report-writing guidelines by meaning instead of exact keywords. You start from two curated markdown files and turn them into a store the agent can query later when it writes product and sales reports.
+In this lab, you create a managed vector store in Foundry IQ. This kind of vectors allows you to quickly vectorize and search documents with a generic approach. This is perfect for use cases like sharing guidelines, where you want to make sure the agent follows the company standards when writing reports.
 
 ### What You Will Learn
 
@@ -312,7 +318,9 @@ This lab spans two files, which you edit in order:
 
 Both files already load the environment variables, configure logging, and set up the boilerplate for you. You only fill the placeholders called out below.
 
-### Create The Project Client
+### Create the Managed Index
+
+#### Create The Project Client
 
 Open `src/foundry_iq/main_managed_index.py` and find the first Lab 1 placeholder.
 
@@ -330,9 +338,10 @@ openai_client = project_client.get_openai_client()
 
 Reading the endpoint from the environment keeps the same code working across every environment, because only the `FOUNDRY_PROJECT_ENDPOINT` value changes.
 
-### Upload The Guideline Files
+#### Upload The Guideline Files
 
-Before Foundry can index the guidelines, the raw markdown files must exist on the service side. Find the second Lab 1 placeholder and upload each file, keeping the returned identifiers.
+Before Foundry can index the guidelines, the raw markdown files must exist on the service side. Let's upload the contoso guidelines already prepared in the `files` folder.
+ Find the second Lab 1 placeholder and upload each file, keeping the returned identifiers.
 
 Replace it with:
 
@@ -347,25 +356,25 @@ for file_path in file_paths:
 
 The `purpose="assistants"` value tells Foundry these files are meant to be used as knowledge for assistants, not for another workflow such as fine-tuning. You collect every `file.id` because the vector store is built from those ids, not from the local paths.
 
-### Create The Vector Store
-
-Now that the files live in Foundry, you can build the searchable index. Find the last Lab 1 placeholder.
-
-Replace it with:
+Then create the vector store from the uploaded files:
 
 ```python
 vector_store = openai_client.vector_stores.create(
     name="report-writing-guidelines-vector-store", file_ids=file_ids
 )
+logger.info("✅ Created vector store id: %s", vector_store.id)
 ```
 
-Foundry chunks and embeds each uploaded file automatically, so a single call is enough to get a store the agent can query semantically. The store keeps a stable id that you will reference from the agent in Lab 4.
+Foundry chunks and embeds each file automatically, so a single call is enough to get a store the agent can query semantically. The store keeps a stable id that will be used by your agent.
 
-### Run The Script
+#### Run The Script
 
 ```bash
 cd src/foundry_iq
+# Get the project dependencies and create a virtual environment
 uv sync
+source .venv/bin/activate
+# Run the script to upload the files and create the vector store
 uv run python main_managed_index.py
 ```
 
@@ -375,17 +384,25 @@ uv run python main_managed_index.py
 
 > The script should log `✅ Created vector store id: ...`.
 >
-> Copy that id and save it in your `.env` file as `VECTOR_STORE_ID`. The agent you wire next needs it to reach the guidelines.
+> Copy that id and save it in your `.env` file as `VECTOR_STORE_ID`. The agent you will create during the next step needs it to reach the guidelines.
 
 </div>
 
-### Put An Agent In Front Of The Vector Store
+You can go to Foundry portal inside **Build** > **Knowledge** > **Indexes** to confirm the files were uploaded successfully:
 
-The vector store is only useful once something queries it. Rather than waiting until the end of the workshop to see an agent run, you build a first version of the orchestrator agent right now, with a single capability: searching the guidelines you just indexed. You extend this same agent in the later labs.
+![foundry-knowledge-indexes](./assets/foundry-iq-managed-index.png)
 
-Open `src/agents/main.py`. It already registers the agent in Foundry and starts DevUI for you; you complete the three Lab 1 placeholders.
+### Consume the Managed Index
 
-### Create The Foundry Chat Client
+Open `src/agents/main.py`. It already registers the agent in Foundry and starts DevUI for you. 
+
+<div class="tip" data-title="DevUI">
+
+> DevUI is a local web app that lets you chat with the agent and see its reasoning. It is automatically launched when you run the agent, so you can test it end-to-end without writing any front-end code.
+
+</div>
+
+#### Create The Foundry Chat Client
 
 Find the first Lab 1 placeholder in `src/agents/main.py`.
 
@@ -401,13 +418,11 @@ foundry_client = FoundryChatClient(
 )
 ```
 
-### Expose The Guidelines As A Tool
+#### Expose The Guidelines As A Tool
 
-Find the second Lab 1 placeholder.
+Next step is to turn the vector store you just created into a tool the agent can call on demand. When the agent decides it needs the report-writing guidelines, it uses this store instead of relying on the model memory, which keeps the reports aligned with the company standards.
 
-This turns the vector store you just created into a tool the agent can call on demand. When the agent decides it needs the report-writing guidelines, it searches this store instead of relying on the model memory, which keeps the reports aligned with the company standards.
-
-Replace it with:
+Find the second Lab 1 placeholder, replace it with:
 
 ```python
 company_guidelines_tool = foundry_client.get_file_search_tool(
@@ -415,13 +430,9 @@ company_guidelines_tool = foundry_client.get_file_search_tool(
 )
 ```
 
-### Wire The Orchestrator Agent
+Here the pieces come together: the chat client drives the model and the tool gives the agent explicit access to the guidelines. The agent starts with an empty `context_providers` list, you will update it later.
 
-Find the last Lab 1 placeholder.
-
-Here the pieces come together: the chat client drives the model and the tool gives the agent explicit access to the guidelines. The agent starts with an empty `context_providers` list; you add identity-aware Azure AI Search retrieval to it in the final lab.
-
-Replace it with:
+Find the last Lab 1 placeholder, replace it with:
 
 ```python
 orchestrator_agent = Agent(
@@ -436,7 +447,10 @@ orchestrator_agent = Agent(
 
 ```bash
 cd src/agents
+# Get the project dependencies and create a virtual environment
+source .venv/bin/activate
 uv sync
+# Run the agent to open DevUI
 uv run python main.py
 ```
 
@@ -444,7 +458,7 @@ uv run python main.py
 
 <div class="task" data-title="Validation">
 
-> Ask the agent for a product or sales report and confirm it searches the guidelines before writing, and that the result follows them.
+> Ask the agent: "What are the guidelines for Naming and Formatting Conventions on Contoso products?" and confirm it searches the product guidelines before writing, and that the result follows them.
 
 </div>
 
