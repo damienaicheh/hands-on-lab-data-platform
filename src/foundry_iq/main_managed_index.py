@@ -45,9 +45,8 @@ def main() -> None:
     vector_store = openai_client.vector_stores.create(
         name="report-writing-guidelines-vector-store", file_ids=file_ids
     )
-    # </lab>
-
     logger.info("✅ Created vector store id: %s", vector_store.id)
+    # </lab>
 
 
 if __name__ == "__main__":
