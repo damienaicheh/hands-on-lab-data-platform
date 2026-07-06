@@ -468,7 +468,7 @@ uv run python main.py
 
 The vector store you just built covers internal writing guidelines. In this lab, you add two more retrieval sources to Foundry IQ, and they play complementary roles:
 
-- an **Azure AI Search source** over the company documents that were indexed at startup. This is where the agent looks first, because it holds the company own content.
+- an **Azure AI Search source** over the company documents that were indexed at startup. This is where the agent will look first, to ask for company content.
 - a **web source** used as a fallback, so when the answer is not in the indexed documents the agent can still ground it on trusted public documentation instead of guessing.
 
 A knowledge source is just a named connector that tells Foundry IQ *where* to look. On their own, these two sources are not enough: the agent needs a single entry point that knows to try the company documents first and fall back to the web when needed. That is exactly why, in the next lab, you group both sources into one knowledge base.
@@ -484,8 +484,6 @@ A knowledge source is just a named connector that tells Foundry IQ *where* to lo
 You only need to edit this file:
 
 - `src/foundry_iq/main_knowledge_base.py`
-
-The Azure AI Search index itself is created separately by `seed_ai_search/create_index.py` at startup. Here you only wire that existing index up as a source. The file already reads every required environment variable and creates the `SearchIndexClient` for you, so keep the rest of the file as-is and only complete the Lab 2 placeholders.
 
 ### Define The Web Knowledge Source
 
@@ -569,7 +567,7 @@ The two knowledge sources are registered, but the agent cannot query them direct
 
 - Group several knowledge sources into one knowledge base.
 - Configure answer synthesis so Foundry IQ returns a written answer, not just raw chunks.
-- Attach an Azure OpenAI model to the knowledge base.
+- Attach a Foundry model to the knowledge base.
 
 ### Files To Open
 
@@ -579,13 +577,15 @@ You stay in the same file:
 
 Complete the Lab 3 placeholder inside `create_knowledge_base(...)`.
 
-### Define And Create The Knowledge Base
+### Define and Create The Knowledge Base
 
-Open `src/foundry_iq/main_knowledge_base.py` and find the Lab 3 placeholder.
+The knowledge base is what the agent actually talks to. A knowledge base can have multiple sources, and it can be configured to return either raw passages or a synthesized answer. This answer is made by the agentic retrieval model you attach to the knowledge base, which reads the retrieved passages and writes a concise, citation-backed answer.
 
-The knowledge base is what the agent actually talks to. It lists the sources to search (both the web source and the search-index source you defined in Lab 2), and because `outputMode` is set to `answerSynthesis`, Foundry IQ uses the configured model to read the retrieved passages and write a concise, citation-backed answer. Pointing the model block at `FOUNDRY_ENDPOINT` and `CHAT_MODEL_DEPLOYMENT` keeps deployment details in configuration rather than hard-coded here.
+The advantage of Knowledge Bases is that you can share it across multiple agents, and you can change the sources or the model without touching the agents themselves.
 
-Replace it with:
+You can also create multiples knowledge bases, by using different sources or different models and use them based on your use case. This is a good way to build multiple scenario based on the same sources, but with different models or different answer instructions.
+
+Open `src/foundry_iq/main_knowledge_base.py` and find the Lab 3 placeholder, replace it with:
 
 ```python
 knowledge_base = KnowledgeBase(
@@ -622,6 +622,8 @@ logger.info(f"Knowledge base '{KNOWLEDGE_BASE_NAME}' ready.")
 return result
 ```
 
+It lists the sources to search (both the web source and the search-index source you defined in previous lab, and because `outputMode` is set to `answerSynthesis`, Foundry IQ uses the configured model to read the retrieved passages and write a concise, citation-backed answer. Pointing the model block at `FOUNDRY_ENDPOINT` and `CHAT_MODEL_DEPLOYMENT` keeps deployment details in configuration rather than hard-coded here.
+
 `retrievalReasoningEffort` set to `low` keeps retrieval fast and inexpensive, which is a good default for a workshop. You can raise it later when you need deeper multi-step reasoning over the sources.
 
 ### Run The Script
@@ -641,11 +643,29 @@ uv run python main_knowledge_base.py
 
 </div>
 
+If you go to Foundry portal inside **Build** > **Knowledge** > **Knowledge Bases**, you should see the `contoso-knowledge-base` knowledge base you just created:
+
+![foundry-knowledge-bases](./assets/foundry-iq-knowledge-base.png)
+
+If you click on it, you can see the two sources and the model it uses for answer synthesis:
+
+![foundry-knowledge-bases-detail](./assets/foundry-knowledge-bases-detail.png)
+
+Also, you can see it direcly inside your AI Search instance:
+
+![foundry-knowledge-sources](./assets/ai-search-knowledge-sources.png)
+
+And also the knowledge base itself:
+
+![foundry-knowledge-base](./assets/ai-search-knowledge-base.png)
+
+If you click on it, you will see that you have also a playground to test it directly from the Azure AI Search portal.
+
 ---
 
 ## Access data from the index based on the user / agent
 
-Your orchestrator agent already retrieves the report-writing guidelines from the vector store you built in Lab 1. In this final step, you connect it to the knowledge base you assembled in Labs 2 and 3, and you make that Azure AI Search retrieval identity-aware, so each user only sees the documents they are allowed to read.
+Your orchestrator agent already retrieves the report-writing guidelines from the managed indexed you built previously. In this final lab, you will connect it to the knowledge base you just created.
 
 ### What You Will Learn
 
@@ -654,19 +674,17 @@ Your orchestrator agent already retrieves the report-writing guidelines from the
 
 ### Files To Open
 
-You go back to the file you started in Lab 1:
+You will need the same file you edited in the previous lab:
 
 - `src/agents/main.py`
 
-The chat client, the guidelines tool and the agent wiring are already there from Lab 1. You only complete the remaining Lab 4 placeholder that plugs the identity-aware search provider into the agent.
+The chat client, the guidelines tool and the agent wiring are already there from previous labs. You only complete the remaining Lab 4 placeholder that will plug the identity-aware search provider into the agent.
 
 ### Add The Identity-Aware Search Provider
 
-Open `src/agents/main.py` and find the Lab 4 placeholder.
+A context provider automatically enriches the conversation with relevant knowledge before the model answers. This one runs in `agentic` mode by using the knowledge base you created previously, so retrieval and answer synthesis happen through Foundry IQ. The important detail is that it is identity-aware: it propagates the signed-in user identity to Azure AI Search, so document-level permissions are enforced and each user only retrieves what they are allowed to see. Assigning it to `context_providers` is what adds it to the agent you wired in Lab 1.
 
-A context provider automatically enriches the conversation with relevant knowledge before the model answers. This one runs in `agentic` mode against the knowledge base from Lab 3, so retrieval and answer synthesis happen through Foundry IQ. The important detail is that it is identity-aware: it propagates the signed-in user identity to Azure AI Search, so document-level permissions are enforced and each user only retrieves what they are allowed to see. Assigning it to `context_providers` is what adds it to the agent you wired in Lab 1.
-
-Replace it with:
+Open `src/agents/main.py` and find the Lab 4 placeholder, replace it with:
 
 ```python
 aisearch_context_provider = IdentityAwareAzureAISearchContextProvider(
@@ -703,6 +721,12 @@ DevUI opens again so you can chat with the full orchestrator agent.
 > Sign in as different users and confirm the Azure AI Search results are trimmed according to each user document permissions.
 
 </div>
+
+If you ask content that are inside the restricted documents, you should see that the answer is different based on the user you are signed in with.
+
+For instance "What is the Q3 2026 Event Budget Tracker ?" should return the content of the document if you are signed in as a user that has access to it, otherwise the agent should answer that it cannot find any information about it.
+
+You can test this easily by adding and removing yourself from the `Contoso-RestrictedDocs` group in Microsoft Entra ID, and then signing in again to the agent.
 
 ---
 

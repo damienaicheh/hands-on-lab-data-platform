@@ -77,7 +77,7 @@ def create_web_knowledge_source(index_client: SearchIndexClient) -> None:
 def create_index_knowledge_source(index_client: SearchIndexClient) -> None:
     """Create the searchIndex knowledge source backed by the built index."""
     # <lab id="2">
-    #|# TODO: define and register the search-index knowledge source (Lab 2).
+    #|raise NotImplementedError("Lab 2: define and register the search-index knowledge source.")
     knowledge_source = SearchIndexKnowledgeSource(
         {
             "name": AI_SEARCH_KNOWLEDGE_BASE_NAME,
@@ -102,7 +102,7 @@ def create_index_knowledge_source(index_client: SearchIndexClient) -> None:
 def create_knowledge_base(index_client: SearchIndexClient) -> KnowledgeBase:
     """Create the Foundry IQ knowledge base over the search-index source."""
     # <lab id="3">
-    #|# TODO: define and create the Foundry IQ knowledge base (Lab 3).
+    #|raise NotImplementedError("Lab 3: define and create the Foundry IQ knowledge base.")
     knowledge_base = KnowledgeBase(
         {
             "name": KNOWLEDGE_BASE_NAME,
