@@ -14,7 +14,7 @@ contacts: # Required. Must match the number of authors
   - "@viguyonv"
 duration_minutes: 300
 tags: microsoft foundry, fabric, foundry iq, fabric iq, agent framework, mcp, ai search, foundry iq, dev-ui, csu, codespace, devcontainer
-navigation_levels: 2
+navigation_levels: 3
 banner_url: assets/banner.jpg
 audience: developers, architects, AI engineers
 
@@ -730,9 +730,11 @@ You can test this easily by adding and removing yourself from the `Contoso-Restr
 
 ---
 
-# Create Sample Workspace Items 
+## Fabric IQ
 
-## 1. Create a Workspace in a Fabric Capacity
+### Create Sample Workspace Items 
+
+#### Create a Workspace in a Fabric Capacity
 
 A workspace is the container for all your Fabric items (notebooks, models, reports, and agents).
 
@@ -744,7 +746,7 @@ A workspace is the container for all your Fabric items (notebooks, models, repor
 
 > The workspace **must** be assigned to a Fabric capacity — Data Agents will not run on a Pro/shared workspace.
 
-## 2. Import the Notebooks
+#### Import the Notebooks
 
 You will import **two** notebooks that quick start the labs, create all the items, and load data into your environment:
 
@@ -760,7 +762,7 @@ You will import **two** notebooks that quick start the labs, create all the item
 
 ---
 
-# Build and Use a Microsoft Fabric Data Agent
+## Build and Use a Microsoft Fabric Data Agent
 
 This guide walks you through creating a **Fabric Data Agent** end to end: from setting up a workspace to publishing an agent that answers natural-language questions over your data.
 
@@ -774,10 +776,8 @@ This guide walks you through creating a **Fabric Data Agent** end to end: from s
 - Permissions to create workspaces and items in Fabric.
 - The sample notebook and data model used in this workshop.
 
----
 
-
-## 1. Open the Data Model and Look at the Tables
+### 1. Open the Data Model and Look at the Tables
 
 The **semantic model** defines the tables, relationships, and measures the agent understands.
 
@@ -789,9 +789,7 @@ The **semantic model** defines the tables, relationships, and measures the agent
 
 > Good, descriptive table and column names dramatically improve the agent's accuracy.
 
----
-
-## 2. Open the Report and Understand the KPIs
+### 2. Open the Report and Understand the KPIs
 
 The report shows how the data is used today and which metrics matter.
 
@@ -800,18 +798,14 @@ The report shows how the data is used today and which metrics matter.
 3. Note how measures are **sliced** — by product, family/category, region, or time.
 4. Keep these KPIs in mind — they are the same questions you'll ask the agent.
 
----
-
-## 3. Create the Data Agent
+### 3. Create the Data Agent
 
 1. In the workspace, select **+ New item**.
 2. Search for and choose **Data agent** (may appear under **Data Science** or **AI**).
 3. Give the agent a **name** (for example, `Sales Assistant`).
 4. Select **Create**. The Data Agent authoring canvas opens.
 
----
-
-## 4. Add Data from the Semantic Model
+### 4. Add Data from the Semantic Model
 
 Give the agent something to reason over.
 
@@ -822,9 +816,7 @@ Give the agent something to reason over.
 
 > Only add the tables the agent needs. Fewer, well-chosen tables produce clearer answers.
 
----
-
-## 5. Ask a First Question
+### 5. Ask a First Question
 
 Test the agent with a simple, direct question.
 
@@ -835,9 +827,7 @@ Test the agent with a simple, direct question.
 
 > Always check the generated query the first few times to verify the agent's reasoning.
 
----
-
-## 6. Add your First Instruction
+### 6. Add your First Instruction
 
 **Instructions** teach the agent about your business context and how to behave.
 
@@ -868,9 +858,7 @@ Test the agent with a simple, direct question.
 
 > Instructions are the single most powerful lever for improving answer quality. Be specific.
 
----
-
-## 7. Ask a Question About "Family"
+### 7. Ask a Question About "Family"
 
 Now test a term the agent may not yet understand, and teach the agent your domain vocabulary.
 
@@ -895,9 +883,8 @@ Now test a term the agent may not yet understand, and teach the agent your domai
 
 > Compare before and after — this shows the direct impact of good instructions.
 
----
 
-## 8. Add a Table from the Lakehouse
+### 8. Add a Table from the Lakehouse
 
 Extend the agent beyond the semantic model by adding raw data.
 
@@ -908,9 +895,7 @@ Extend the agent beyond the semantic model by adding raw data.
 
 > Data Agents can combine multiple sources — semantic models, lakehouses, and warehouses — in one agent.
 
----
-
-## 9. Add a SQL Sample Query
+### 9. Add a SQL Sample Query
 
 **Example queries** show the agent how to query a source correctly.
 
@@ -933,17 +918,13 @@ Extend the agent beyond the semantic model by adding raw data.
 
 > Sample queries teach join patterns and column usage, improving accuracy for lakehouse/warehouse sources.
 
----
-
-## 10. Ask a Question Against the New Source
+### 10. Ask a Question Against the New Source
 
 1. Ask a question that requires the lakehouse table, for example:
    > *"Give me the quantity of product returned, by product category and return reason."*
 2. Confirm the agent uses the lakehouse table by taking a look at the steps completed, at then end of the answer, and check if it follows the pattern from your sample query.
 
----
-
-## 11. Generate a Visual
+### 11. Generate a Visual
 
 1. Ask a question and request a chart, for example:
    > *"Show sales by product family as a bar chart."*
@@ -952,9 +933,7 @@ Extend the agent beyond the semantic model by adding raw data.
 
 > You can pin or export the generated visuals for reuse.
 
----
-
-## 12. Publish the Agent
+### 12. Publish the Agent
 
 Make the agent available to your users.
 
@@ -967,9 +946,7 @@ Make the agent available to your users.
 
 > Only users with permission to the underlying data sources can get answers. Verify sharing at both the agent and data-source level.
 
----
-
-## Summary
+### Summary
 
 You have:
 
@@ -981,7 +958,7 @@ You have:
 6. Extended the agent with a **lakehouse table** and a **SQL sample query**.
 7. Generated a **visual** and **published** the agent.
 
-## Tips for Great Data Agents
+### Tips for Great Data Agents
 
 - **Iterate on instructions** — most quality gains come from clear, specific instructions.
 - **Use business language** in table/column names and instructions.
@@ -989,47 +966,28 @@ You have:
 - **Verify generated queries** early to build trust in the answers.
 - **Keep sources focused** — add only the tables users actually ask about.
 
-## Further Reading
+### Further Reading
 
 - [Fabric Data Agent overview](https://learn.microsoft.com/fabric/data-science/concept-data-agent)
 - [Create a Fabric Data Agent](https://learn.microsoft.com/fabric/data-science/how-to-create-data-agent)
 - [Data Agent instructions and best practices](https://learn.microsoft.com/fabric/data-science/data-agent-scenario)
 
+---
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Build a Real Time use case in Microsoft Fabric 
+## Build a Real Time use case in Microsoft Fabric 
 
 This guide walks you through building a **Real-Time Intelligence (RTI)** solution in Microsoft Fabric: streaming live weather data into an **Eventstream**, landing it in an **Eventhouse**, shaping it with **KQL**, and exposing it to a **Lakehouse** through **OneLake availability**.
 
 > **What is Real-Time Intelligence?**
 > RTI is the Fabric workload for ingesting, storing, and analyzing high-volume, time-based data. **Eventstreams** move events, **Eventhouses/KQL databases** store and query them at scale, and **KQL** (Kusto Query Language) powers fast analytics over streaming data.
 
-## Prerequisites
+### Prerequisites
 
 - A **Microsoft Fabric** tenant with a **Fabric Capacity** (F2 or higher, or a trial).
 - Permissions to create RTI items (Eventstream, Eventhouse) in your workspace.
 - The workspace created earlier in this workshop.
 
----
-
-## 1. Create an Eventhouse
+### 1. Create an Eventhouse
 
 The **Eventhouse** is the storage and analytics engine. Creating one automatically provisions a **KQL database**.
 
@@ -1040,9 +998,7 @@ The **Eventhouse** is the storage and analytics engine. Creating one automatical
 
 > The Eventhouse can hold many KQL databases. For this workshop we use the default one.
 
----
-
-## 2. Create an Eventstream
+### 2. Create an Eventstream
 
 The **Eventstream** ingests events from a source and routes them to destinations.
 
@@ -1051,9 +1007,8 @@ The **Eventstream** ingests events from a source and routes them to destinations
 3. Give it a name (for example, `Weather_Eventstream`) and select **Create**.
 4. The Eventstream authoring canvas opens with an empty **Source → Destination** design surface.
 
----
 
-## 3. Add a Real-Time Weather Source (Paris, FR)
+### 3. Add a Real-Time Weather Source (Paris, FR)
 
 1. On the canvas, select **Add source** → **Sample data** (or **Custom endpoint / API** if a weather connector is not available in your tenant).
 2. If a **Weather** sample is available, choose it; otherwise create a **Custom endpoint** source and push data from a free weather API such as **Open-Meteo** for Paris:
@@ -1064,9 +1019,7 @@ The **Eventstream** ingests events from a source and routes them to destinations
 
 > Keep the raw JSON shape in mind — you'll map these fields in KQL next.
 
----
-
-## 4. Load Data into a Raw Table in the Eventhouse
+### 4. Load Data into a Raw Table in the Eventhouse
 
 Route the stream into the Eventhouse as a **raw landing (bronze) table**.
 
@@ -1085,9 +1038,8 @@ Example raw table (full payload as one dynamic column):
 
 > Wait a minute or two, then verify rows arrive with `WeatherRaw | count`.
 
----
 
-## 5. Query the Data Using KQL
+### 5. Query the Data Using KQL
 
 1. In the Eventhouse, open the **KQL database** and select **New query set** (or use the **Explore your data** query editor).
 2. Run a few basic queries:
@@ -1105,9 +1057,7 @@ WeatherRaw
 
 > `ingestion_time()` is a hidden column that tells you when each record landed — handy for validating a live stream.
 
----
-
-## 6. Create a Second-Layer (Silver) Table
+### 6. Create a Second-Layer (Silver) Table
 
 Shape the raw JSON into a clean, typed **silver table**.
 
@@ -1123,9 +1073,7 @@ Shape the raw JSON into a clean, typed **silver table**.
 
 > Typed columns make queries faster and enable relationships with dimension data.
 
----
-
-## 7. Use an Update Policy to Populate the Silver Table
+### 7. Use an Update Policy to Populate the Silver Table
 
 An **update policy** automatically transforms rows from the raw table into the silver table on ingestion.
 
@@ -1162,6 +1110,8 @@ An **update policy** automatically transforms rows from the raw table into the s
 
 3. New rows landing in `WeatherRaw` now flow automatically into `WeatherSilver`. Verify:
 
+#### Verify the Silver Table
+
 ```kql
 WeatherSilver
 | top 10 by ObservedAt desc
@@ -1169,9 +1119,7 @@ WeatherSilver
 
 > Update policies run at ingestion time — historical rows already in `WeatherRaw` are **not** reprocessed automatically.
 
----
-
-## 8. Create a Dimension Table
+### 8. Create a Dimension Table
 
 Add descriptive **dimension** data to enrich the weather facts.
 
@@ -1199,9 +1147,7 @@ WeatherSilver
 
 > Dimension tables let you filter and group weather metrics by country, region, or coordinates.
 
----
-
-## 9. Aggregate with a Materialized View
+### 9. Aggregate with a Materialized View
 
 A **materialized view** keeps a continuously updated aggregation for fast reads.
 
@@ -1227,9 +1173,7 @@ WeatherHourly
 
 > Materialized views are ideal for dashboards — they precompute aggregations so reports stay fast even as data grows.
 
----
-
-## 10. Enable OneLake Availability and Link to a Lakehouse
+### 10. Enable OneLake Availability and Link to a Lakehouse
 
 Expose the KQL data in **OneLake** so a **Lakehouse** (and other engines) can read it.
 
@@ -1243,9 +1187,7 @@ Expose the KQL data in **OneLake** so a **Lakehouse** (and other engines) can re
 
 > OneLake availability writes KQL data as Delta tables, so the same weather data is instantly usable across Lakehouse, Warehouse, and Power BI.
 
----
-
-## Summary
+### Summary
 
 You have:
 
@@ -1257,7 +1199,7 @@ You have:
 6. Aggregated data with a **materialized view**.
 7. Enabled **OneLake availability** and linked the data to a **Lakehouse** via a shortcut.
 
-## Tips for Great Real-Time Solutions
+### Tips for Great Real-Time Solutions
 
 - **Land raw, transform in layers** — keep a bronze table, then refine with update policies.
 - **Use update policies** for lightweight, per-ingestion transformations; use materialized views for aggregations.
@@ -1265,7 +1207,7 @@ You have:
 - **Enable OneLake availability** to share streaming data across Fabric without copies.
 - **Bin by time** (`bin(Timestamp, 1h)`) to power time-series dashboards efficiently.
 
-## Further Reading
+### Further Reading
 
 - [Real-Time Intelligence overview](https://learn.microsoft.com/fabric/real-time-intelligence/overview)
 - [Create an Eventhouse](https://learn.microsoft.com/fabric/real-time-intelligence/create-eventhouse)
@@ -1274,7 +1216,9 @@ You have:
 - [Materialized views](https://learn.microsoft.com/kusto/management/materialized-views/materialized-view-overview)
 - [OneLake availability for KQL databases](https://learn.microsoft.com/fabric/real-time-intelligence/one-logical-copy)
 
-# Use the Fabric RTI MCP Server from the Command Line
+---
+
+## Use the Fabric RTI MCP Server from the Command Line
 
 The **Fabric Real-Time Intelligence (RTI) MCP server** lets an AI agent talk to your **Eventhouse** in natural language — generating and running **KQL** — using the Model Context Protocol (MCP). In this module you'll run it entirely from a terminal with **GitHub Copilot CLI**, no VS Code required.
 
@@ -1291,9 +1235,7 @@ The **Fabric Real-Time Intelligence (RTI) MCP server** lets an AI agent talk to 
   ```
 - **Azure CLI** installed, for authentication. The MCP server uses `DefaultAzureCredential`.
 
----
-
-## 1. Sign In to Azure
+### 1. Sign In to Azure
 
 The MCP server authenticates as **you** via the Azure CLI login.
 
@@ -1307,9 +1249,7 @@ Complete the browser sign-in, then confirm your account:
 az account show
 ```
 
----
-
-## 2. Install the GitHub Copilot CLI
+### 2. Install the GitHub Copilot CLI
 
 ```cmd
 npm install -g @github/copilot
@@ -1325,7 +1265,7 @@ copilot
 
 ---
 
-## 3. Get Your Eventhouse Query URI
+### 3. Get Your Eventhouse Query URI
 
 1. In Fabric, open your **Eventhouse** → **KQL database**.
 2. Copy the **Query URI** (looks like `https://<guid>.<region>.kusto.fabric.microsoft.com`).
@@ -1333,7 +1273,7 @@ copilot
 
 ---
 
-## 4. Register the Fabric RTI MCP Server
+### 4. Register the Fabric RTI MCP Server
 
 Inside a Copilot CLI session, add the server interactively:
 
@@ -1366,9 +1306,7 @@ Restart the CLI so it picks up the config, then list the loaded servers:
 
 You should see `fabric-rti-mcp` and its tools (`kusto_query`, `kusto_describe_database`, `kusto_sample_entity`, etc.).
 
----
-
-## 5. Ask Questions in Natural Language
+### 5. Ask Questions in Natural Language
 
 From the Copilot CLI prompt, ask questions that map to the KQL tables you built earlier:
 
@@ -1382,9 +1320,8 @@ From the Copilot CLI prompt, ask questions that map to the KQL tables you built 
 
 The agent calls the RTI tools and shows the **generated KQL** before returning results — review it to verify the reasoning.
 
----
 
-## 6. (Optional) Run a One-Shot Prompt Without a Session
+### 6. (Optional) Run a One-Shot Prompt Without a Session
 
 You can also invoke Copilot CLI non-interactively from `cmd`, which is handy for scripts:
 
@@ -1392,15 +1329,14 @@ You can also invoke Copilot CLI non-interactively from `cmd`, which is handy for
 copilot -p "Sample 10 rows from the WeatherSilver table in my Eventhouse"
 ```
 
----
 
-## Summary
+### Summary
 
 - You authenticated with **`az login`** and installed the **GitHub Copilot CLI**.
 - You registered the **Fabric RTI MCP** server via `/mcp add` (or `mcp-config.json`).
 - You queried your Eventhouse in natural language — the agent generated and ran **KQL** for you, all from the terminal.
 
-## Further Reading
+### Further Reading
 
 - [Microsoft MCP servers catalog](https://github.com/microsoft/mcp)
 - [Fabric RTI MCP server](https://aka.ms/rti.mcp.repo)
@@ -1408,32 +1344,12 @@ copilot -p "Sample 10 rows from the WeatherSilver table in my Eventhouse"
 
 ---
 
-## Fabric IQ
-
-- TODO
-- Connect the orchestrator agent to the Fabric IQ agent
-
----
-
-## Ontology
-
-- Ontology
-
----
-
-## Fabric RTI
-
-- Realtime ingestion
-
----
-
-## MCP
-
-MCP Dev (Optional)
-MCP Fabric => Consommer BDD / RTI / Données
-MCP Agentic 
-
----
-
 ## Closing
 
+Once you're done with this lab you can delete the resource group you created at the beginning.
+
+To do so, click on **Delete resource group** in the Azure Portal to delete all the resources at once. The following Az-Cli command can also be used to delete the resource group:
+
+```bash
+# Delete the resource group with all the resources
+az group delete --name <resource-group>
