@@ -776,10 +776,14 @@ This guide walks you through creating a **Fabric Data Agent** end to end: from s
 > **What is a Fabric Data Agent?**
 > A Fabric Data Agent lets business users ask questions about their data in plain language. It uses AI to translate questions into queries against your semantic models, lakehouses, and warehouses, then returns answers, tables, and visuals. 
 
-## Prerequisites
+### Prerequisites
 
-- A **Microsoft Fabric** tenant with a **Fabric Capacity** (F2 or higher, or a trial).
-- The **Fabric Data Agent** feature enabled by your tenant admin.
+- The **Fabric Data Agent** feature enabled by your tenant admin. To do that, on the top right corner select the **gear icon** → **Admin portal** → **Tenant Settings** → **Enable Fabric App Items**.
+
+Activate the **Enable** toggle and select **Apply**. This may take a few minutes to propagate.
+
+![fabric-admin-enable-data-agent](./assets/fabric-iq-enable-app-items.png)
+
 - Permissions to create workspaces and items in Fabric.
 - The sample notebook and data model used in this workshop.
 
