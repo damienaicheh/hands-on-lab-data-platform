@@ -730,31 +730,38 @@ You can test this easily by adding and removing yourself from the `Contoso-Restr
 
 ---
 
-## Fabric IQ
+## Setup Fabric IQ
 
-### Create Sample Workspace Items 
-
-#### Create a Workspace in a Fabric Capacity
+### Create a Workspace in a Fabric Capacity
 
 A workspace is the container for all your Fabric items (notebooks, models, reports, and agents).
 
 1. Go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com) and sign in.
 2. In the left navigation, select **Workspaces** → **+ New workspace**.
 3. Give it a clear **name** (for example, `Data Agent Workshop`).
-4. Expand **Advanced** and under **License mode**, select **Fabric capacity** and choose your capacity.
+![fabric-workspace-new](./assets/fabric-iq-create-workspace-capacity-part-1.png)
+4. Expand **Advanced** and under **License mode**, select **Fabric capacity** and choose your capacity. It must be the one in the resource group you deployed for this workshop.
+![fabric-workspace-new-capacity](./assets/fabric-iq-create-workspace-capacity-part-2.png)
 5. Select **Apply**.
+
+<div class="warning" data-title="Important">
 
 > The workspace **must** be assigned to a Fabric capacity — Data Agents will not run on a Pro/shared workspace.
 
-#### Import the Notebooks
+</div>
+
+### Import the Notebooks
 
 You will import **two** notebooks that quick start the labs, create all the items, and load data into your environment:
 
 - **Bootstrap Workspace** — orchestrates the setup: creates the lakehouse, rebinds and runs the data notebook, then creates the semantic model and report.
 - **NB - Mimosa Gravel Data Generator** — the data generator/loader that builds the lakehouse tables you'll query. It is run automatically by the Bootstrap notebook, so you don't run it yourself.
 
+These files are located in the `src/seed_fabric` folder of the starter project you cloned.
+
 1. Inside your new workspace, select **Import** → **Notebook** → **From this computer** (or **Upload**).
 2. Choose **both** provided `.ipynb` notebooks and confirm. Make sure they both appear in the workspace before continuing.
+![fabric-workspace-import-notebooks](./assets/fabric-iq-import-notebooks.png)
 3. Open the **Bootstrap Workspace** notebook.
 4. At the top, click **Run all** to execute every cell. Wait for the notebook to finish before continuing. 
 
