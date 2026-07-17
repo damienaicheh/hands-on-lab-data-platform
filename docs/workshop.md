@@ -1263,7 +1263,6 @@ copilot
 
 > On first run, follow the device-code prompt to link your GitHub Copilot subscription.
 
----
 
 ### 3. Get Your Eventhouse Query URI
 
@@ -1271,7 +1270,6 @@ copilot
 2. Copy the **Query URI** (looks like `https://<guid>.<region>.kusto.fabric.microsoft.com`).
 3. Note the **database name** (for example, `Weather_Eventhouse`).
 
----
 
 ### 4. Register the Fabric RTI MCP Server
 
