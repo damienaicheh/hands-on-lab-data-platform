@@ -218,7 +218,7 @@ The deployment should take a few minutes to complete.
 
 ---
 
-## Set up your environment
+## Setup Foundry IQ
 
 ### The starter project
 
