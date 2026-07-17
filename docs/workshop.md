@@ -66,7 +66,7 @@ To use a GitHub Codespace, you will need :
 
 - [A GitHub Account][github-account]
 
-Create a new GitHub repository, unzip the starter project and push it to your new repository. Then, you can create a new GitHub Codespace from your repository.
+Create a **new GitHub repository** in your GitHub account, unzip the starter project and push it to your new repository. Then, you can create a new GitHub Codespace from your repository.
 
 GitHub Codespace offers the ability to run a complete dev environment (Visual Studio Code, Extensions, Tools, Secure port forwarding etc.) on a dedicated virtual machine.
 The configuration for the environment is defined in the `.devcontainer` folder, making sure everyone gets to develop and practice on identical environments : No more conflict on dependencies or missing tools !
@@ -75,7 +75,7 @@ Every GitHub account (even the free ones) grants access to 120 vcpu hours per mo
 
 To get your codespace ready for the labs, here are a few steps to execute :
 
-- After you forked the repo, click on `<> Code`, `Codespaces` tab and then click on the `+` button:
+- After you pushed the code to your new repository, click on `<> Code`, `Codespaces` tab and then click on the `+` button:
 
 ![codespace-new](./assets/codespace-new.png)
 
@@ -92,10 +92,9 @@ Here are the required tools to do so :
 - [Docker Desktop][docker-desktop] running
 - [Visual Studio Code][vs-code] installed on your machine
 
-Start by cloning the repository you just forked on your local Machine and open the local folder in Visual Studio Code.
-Once you have cloned the repository locally, make sure Docker Desktop is up and running and open the cloned repository in Visual Studio Code.  
+Make sure Docker Desktop is up and running and open the cloned repository in Visual Studio Code.
 
-You will be prompted to open the project in a Dev Container. Click on `Reopen in Container`.
+Unzip the starter project and open the local folder in Visual Studio Code. You will be prompted to open the project in a Dev Container. Click on `Reopen in Container`.
 
 If you are not prompted by Visual Studio Code, you can open the command palette (`Ctrl + Shift + P`) and search for `Reopen in Container` and select it:
 
@@ -130,7 +129,7 @@ Visual Studio Code Extensions to install :
 - [ms-python.debugpy][ms-python-debugpy-extension]
 - [hashicorp.terraform][hashicorp-terraform-extension]
 
-Once you have set up your local environment, you can clone the repository you just forked on your machine, and open the local folder in Visual Studio Code and head to the next step.
+Once you have set up your local environment, you can unzip the starter project on your machine, and open the local folder in Visual Studio Code and head to the next step.
 
 ### Sign in to Azure
 
