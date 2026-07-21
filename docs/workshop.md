@@ -769,7 +769,7 @@ A workspace is the container for all your Fabric items (notebooks, models, repor
 
 You will import **two** notebooks that quick start the labs, create all the items, and load data into your environment:
 
-- **Bootstrap Workspace** — orchestrates the setup: creates the lakehouse, rebinds and runs the data notebook, then creates the semantic model and report.
+- **NB - Bootstrap Workspace** — orchestrates the setup: creates the lakehouse, rebinds and runs the data notebook, then creates the semantic model and report.
 - **NB - Mimosa Gravel Data Generator** — the data generator/loader that builds the lakehouse tables you'll query. It is run automatically by the Bootstrap notebook, so you don't run it yourself.
 
 These files are located in the `src/seed_fabric` folder of the starter project you cloned.
@@ -777,10 +777,25 @@ These files are located in the `src/seed_fabric` folder of the starter project y
 1. Inside your new workspace, select **Import** → **Notebook** → **From this computer** (or **Upload**).
 2. Choose **both** provided `.ipynb` notebooks and confirm. Make sure they both appear in the workspace before continuing.
 ![fabric-workspace-import-notebooks](./assets/fabric-iq-import-notebooks.png)
-3. Open the **Bootstrap Workspace** notebook.
+3. Open the **NB - Bootstrap Workspace** notebook.
 4. At the top, click **Run all** to execute every cell. Wait for the notebook to finish before continuing. 
 
-> The Bootstrap notebook automatically rebinds the data notebook to the newly created lakehouse and runs it — you only need to run the Bootstrap notebook. Wait for all cells to complete. This creates the tables, semantic model, and report your agent will rely on.
+
+> The Bootstrap notebook automatically generates the necessary items to be able to create the data agent, but it does not create data. We now need to generate our data ! 
+
+5. Close the notebook and come back to the workspace. You should be able to see a new lakehouse, a semantic model, and a report. Open the generate data notebook. 
+6. First, on the left pane, bind the notebook to the newly created lakehouse : 
+![bind-notebook](./assets/fabric-bind-notebook-to-onelake.png)
+7. From the explorer, chose the right workspace, find the lakehouse, and check the corresponding box to bind it to the notebook. 
+![bind-notebook-2](./assets/fabric-bind-notebook-to-onelake-2.png)
+8. Once binded, you should see it on the left pane. Obtain the **ABFS Path** of the **Files** folder, and copy it inplace of the BASE_PATH variable row 6 of the first notebook cell. 
+![copy-path](./assets/fabric-copy-abffs-path.png)
+![replace-row-six](./assets/fabric-replace-row-six.png)
+9. Start the notebook using the Run All button at the top. 
+10. Once over, come back to the workspace, and refresh the semantic model by using the refresh button next to the Semantic model name. 
+![alt text](./assets/fabric-refresh-model.png)
+
+> The Generate data notebook populates with fake data our Sales & Retail Model. We are now ready to start working with a Data Agent ! 
 
 ---
 
