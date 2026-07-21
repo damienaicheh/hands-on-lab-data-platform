@@ -744,7 +744,7 @@ In order to use/develop any Fabric Items and use Fabric Data Agents, a few prere
 ![alt text](./assets/fabric-enable-fabric-items.png)
 6. Now find, using the search bar on the right, "open". 
 7. Enable all 4 menus in the **Copilot and Azure OpenAI Service** list. 
-![open-ai-service-enablement](.\assets\fabric-enable-open-ai.png)
+![open-ai-service-enablement](./assets/fabric-enable-open-ai.png)
 8. Select **Apply** and leave the admin portal. 
 
 ### Create a Workspace in a Fabric Capacity
