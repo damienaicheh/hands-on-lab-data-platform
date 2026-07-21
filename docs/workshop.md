@@ -731,6 +731,22 @@ You can test this easily by adding and removing yourself from the `Contoso-Restr
 
 ## Setup Fabric IQ
 
+
+### Ask your Administrator to enable Fabric items and OpenAI in Microsoft Fabric 
+
+In order to use/develop any Fabric Items and use Fabric Data Agents, a few prerequisites must be respected. 
+
+1. Ask your Fabric Administrator to go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com) and sign in.
+2. On top right, ask him to open **Settings**, and at the bottom of the pane find **Admin Portal**
+3. In the left menu pane, find **Admin Settings** (must be where you land by default, if you are fabric admin)
+4. Enable multiple features : (First one at the top) **Users can create Fabric items** (either for everyone, or for a specific security group)
+5. Select **Apply**.
+![alt text](./assets/fabric-enable-fabric-items.png)
+6. Now find, using the search bar on the right, "open". 
+7. Enable all 4 menus in the **Copilot and Azure OpenAI Service** list. 
+![open-ai-service-enablement](.\assets\fabric-enable-open-ai.png)
+8. Select **Apply** and leave the admin portal. 
+
 ### Create a Workspace in a Fabric Capacity
 
 A workspace is the container for all your Fabric items (notebooks, models, reports, and agents).
@@ -774,18 +790,6 @@ This guide walks you through creating a **Fabric Data Agent** end to end: from s
 
 > **What is a Fabric Data Agent?**
 > A Fabric Data Agent lets business users ask questions about their data in plain language. It uses AI to translate questions into queries against your semantic models, lakehouses, and warehouses, then returns answers, tables, and visuals. 
-
-### Prerequisites
-
-- The **Fabric Data Agent** feature enabled by your tenant admin. To do that, on the top right corner select the **gear icon** → **Admin portal** → **Tenant Settings** → **Enable Fabric App Items**.
-
-Activate the **Enable** toggle and select **Apply**. This may take a few minutes to propagate.
-
-![fabric-admin-enable-data-agent](./assets/fabric-iq-enable-app-items.png)
-
-- Permissions to create workspaces and items in Fabric.
-- The sample notebook and data model used in this workshop.
-
 
 ### 1. Open the Data Model and Look at the Tables
 
