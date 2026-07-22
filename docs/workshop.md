@@ -732,17 +732,17 @@ You can test this easily by adding and removing yourself from the `Contoso-Restr
 ## Setup Fabric IQ
 
 
-### Ask your Administrator to enable Fabric items and OpenAI in Microsoft Fabric 
+### Enable Fabric items and OpenAI in Microsoft Fabric 
 
 In order to use/develop any Fabric Items and use Fabric Data Agents, a few prerequisites must be respected. 
 
-1. Ask your Fabric Administrator to go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com) and sign in.
-2. On top right, ask him to open **Settings**, and at the bottom of the pane find **Admin Portal**
-3. In the left menu pane, find **Admin Settings** (must be where you land by default, if you are fabric admin)
-4. Enable multiple features : (First one at the top) **Users can create Fabric items** (either for everyone, or for a specific security group)
+1. You will need administrator rights on Fabric to enable Fabric items and OpenAI. Go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com) and sign in.
+2. On top right, open **Settings**, and at the bottom of the pane find **Admin Portal**
+3. In the left menu pane, find **Tenant Settings** (must be where you land by default, if you are fabric admin)
+4. Enable multiple features : (First one at the top) **Users can create Fabric items** (either for the entire organization, or for a specific security group)
 5. Select **Apply**.
 ![alt text](./assets/fabric-enable-fabric-items.png)
-6. Now find, using the search bar on the right, "open". 
+6. Now, using the search bar on the right type: `open`. 
 7. Enable all 4 menus in the **Copilot and Azure OpenAI Service** list. 
 ![open-ai-service-enablement](./assets/fabric-enable-open-ai.png)
 8. Select **Apply** and leave the admin portal. 
@@ -751,13 +751,13 @@ In order to use/develop any Fabric Items and use Fabric Data Agents, a few prere
 
 A workspace is the container for all your Fabric items (notebooks, models, reports, and agents).
 
-1. Go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com) and sign in.
-2. In the left navigation, select **Workspaces** → **+ New workspace**.
+1. Go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com/home?experience=fabric-developer) and sign in.
+2. Click on **+ New workspace**.
 3. Give it a clear **name** (for example, `Data Agent Workshop`).
 ![fabric-workspace-new](./assets/fabric-iq-create-workspace-capacity-part-1.png)
-4. Expand **Advanced** and under **License mode**, select **Fabric capacity** and choose your capacity. It must be the one in the resource group you deployed for this workshop.
+4. In the **Details**, choose your **Fabric capacity**. It must be the one in the resource group you deployed for this workshop.
 ![fabric-workspace-new-capacity](./assets/fabric-iq-create-workspace-capacity-part-2.png)
-5. Select **Apply**.
+5. Leave the rest of the options as default. Select **Apply**.
 
 <div class="warning" data-title="Important">
 
@@ -783,13 +783,18 @@ These files are located in the `src/seed_fabric` folder of the starter project y
 
 > The Bootstrap notebook automatically generates the necessary items to be able to create the data agent, but it does not create data. We now need to generate our data ! 
 
-5. Close the notebook and come back to the workspace. You should be able to see a new lakehouse, a semantic model, and a report. Open the generate data notebook. 
-6. First, on the left pane, bind the notebook to the newly created lakehouse : 
+5. When the execution is done, close the notebook (top left **X**) you will automatically go back to the workspace. You should be able to see a new lakehouse, a semantic model, and a report inside your workspace. 
+![first-import](./assets/fabric-iq-first-import.png)
+
+6. Open the **NB - Mimosa Gravel Data Generator** notebook. First, on the left pane, bind the notebook to the newly created lakehouse : 
 ![bind-notebook](./assets/fabric-bind-notebook-to-onelake.png)
+
 7. From the explorer, chose the right workspace, find the lakehouse, and check the corresponding box to bind it to the notebook. 
 ![bind-notebook-2](./assets/fabric-bind-notebook-to-onelake-2.png)
-8. Once binded, you should see it on the left pane. Obtain the **ABFS Path** of the **Files** folder, and copy it inplace of the BASE_PATH variable row 6 of the first notebook cell. 
+8. Once binded, you should see it on the left pane. 
+Obtain the **ABFS Path** of the **Files** folder:
 ![copy-path](./assets/fabric-copy-abffs-path.png)
+and copy it inplace of the BASE_PATH variable row 6 of the first notebook cell:
 ![replace-row-six](./assets/fabric-replace-row-six.png)
 9. Start the notebook using the Run All button at the top. 
 10. Once over, come back to the workspace, and refresh the semantic model by using the refresh button next to the Semantic model name. 
