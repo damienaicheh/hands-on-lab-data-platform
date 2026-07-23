@@ -17,7 +17,6 @@ tags: microsoft foundry, fabric, foundry iq, fabric iq, agent framework, mcp, ai
 navigation_levels: 3
 banner_url: assets/banner.jpg
 audience: developers, architects, AI engineers
-
 ---
 
 # Product Hands-on Lab - AI Data Platform
@@ -1044,34 +1043,28 @@ The **Eventstream** ingests events from a source and routes them to destinations
 
 ### 3. Add a Real-Time Weather Source (Paris, FR)
 
-1. On the canvas, select **Add source** → **Sample data** (or **Custom endpoint / API** if a weather connector is not available in your tenant).
-2. If a **Weather** sample is available, choose it; otherwise create a **Custom endpoint** source and push data from a free weather API such as **Open-Meteo** for Paris:
-   - Latitude `48.8566`, Longitude `2.3522` (Paris, FR).
-   - Example endpoint: `https://api.open-meteo.com/v1/forecast?latitude=48.8566&longitude=2.3522&current=temperature_2m,relative_humidity_2m,wind_speed_10m`
+1. On the canvas, select **Add source** → **Connect Datasource** 
+2. Chose **Real-time Weather** in the list of Recommended Datasources.
 3. Name the source (for example, `Paris_Weather`).
-4. In the **Preview** pane, confirm you can see incoming weather events (temperature, wind speed, humidity, timestamp).
-
+4. In the location pane, chose Paris in France. 
+![fabric-rti-datasource]](./assets/fabric-rti-datasource.png)
+5. Back in the workflow, click the datasource, and look at the Data Preview pane at the bottom. You should see live data. 
 > Keep the raw JSON shape in mind — you'll map these fields in KQL next.
 
 ### 4. Load Data into a Raw Table in the Eventhouse
 
 Route the stream into the Eventhouse as a **raw landing (bronze) table**.
 
-1. On the Eventstream canvas, select **Add destination** → **Eventhouse**.
+1. On the Eventstream canvas, select **Transform events or add destionation** and at the bottom, chose **Eventhouse**.
 2. Choose **Event processing before ingestion** (or **Direct ingestion**).
-3. Select your **workspace**, the **Eventhouse**, and the **KQL database** from step 1.
-4. Create a new destination table named `WeatherRaw`.
-5. Map the incoming payload to the table (accept the inferred schema, or land the full event as a single `dynamic` column).
-6. **Publish** the Eventstream and confirm events start flowing.
-
-Example raw table (full payload as one dynamic column):
-
-```kql
-.create table WeatherRaw (payload: dynamic)
-```
-
-> Wait a minute or two, then verify rows arrive with `WeatherRaw | count`.
-
+3. Select your **workspace**, the **Eventhouse** previously created, and the **KQL database** from step 1.
+4. Pick **Create new** in **KQL Destination table**. 
+![fabric-rti-new-table]](./assets/fabric-rti-new-table.png)
+5. Create a new destination table named `WeatherRaw` and click Save.
+6. At top right corner, click **Publish** the Eventstream and confirm events start flowing.
+7. Come back to the Event House (either from the workspace, or from the quick menu). 
+8. Open the KQL Database, and click on the query set. (If you followed the naming, it would be called `Weather_EventHouse_queryset`)
+9. Wait a minute or two, then verify rows arrive with `WeatherRaw | count`.
 
 ### 5. Query the Data Using KQL
 
@@ -1091,17 +1084,28 @@ WeatherRaw
 
 > `ingestion_time()` is a hidden column that tells you when each record landed — handy for validating a live stream.
 
+3. KQL database comes with a lot of functions and inline command. To check the schema of the table, use the following code : `WeatherRaw | getschema`
+4. Notice that the raw schema comes from the EventStream handling. 
+
 ### 6. Create a Second-Layer (Silver) Table
 
-Shape the raw JSON into a clean, typed **silver table**.
+Shape the raw JSON into a clean, typed **silver table**. The `WeatherRaw` table exposes the fields sent by the Real-time Weather source: scalar columns (such as `relativeHumidity`, `uvIndex`, `cloudCover`, `hasPrecipitation`, `daytime`) and dynamic objects (such as `temperature`, `wind`, `dewPoint`) that wrap their reading in a `value` property.
 
 ```kql
 .create table WeatherSilver (
     City: string,
     ObservedAt: datetime,
+    Description: string,
     TemperatureC: real,
+    RealFeelC: real,
+    Humidity: long,
+    DewPointC: real,
     WindSpeedKmh: real,
-    Humidity: int
+    WindGustKmh: real,
+    UvIndex: long,
+    CloudCover: long,
+    HasPrecipitation: bool,
+    IsDaytime: bool
 )
 ```
 
@@ -1117,20 +1121,27 @@ An **update policy** automatically transforms rows from the raw table into the s
 .create function WeatherRawToSilver() {
     WeatherRaw
     | project
-        City = "Paris",
-        ObservedAt = todatetime(payload.time),
-        TemperatureC = toreal(payload.temperature_2m),
-        WindSpeedKmh = toreal(payload.wind_speed_10m),
-        Humidity = toint(payload.relative_humidity_2m)
+        City = tostring(locationName),
+        ObservedAt = todatetime(dateTime),
+        Description = tostring(description),
+        TemperatureC = toreal(temperature.value),
+        RealFeelC = toreal(realFeelTemperature.value),
+        Humidity = tolong(relativeHumidity),
+        DewPointC = toreal(dewPoint.value),
+        WindSpeedKmh = toreal(wind.speed.value),
+        WindGustKmh = toreal(windGust.speed.value),
+        UvIndex = tolong(uvIndex),
+        CloudCover = tolong(cloudCover),
+        HasPrecipitation = tobool(hasPrecipitation),
+        IsDaytime = tobool(daytime)
 }
 ```
 
 2. Attach the update policy to `WeatherSilver`, sourced from `WeatherRaw`:
 
-```kql
+````kql
 .alter table WeatherSilver policy update
 ```
-```json
 [
   {
     "IsEnabled": true,
@@ -1140,8 +1151,10 @@ An **update policy** automatically transforms rows from the raw table into the s
     "PropagateIngestionProperties": false
   }
 ]
-```
 
+````
+> The workshop markdown tends to render the code with backquote complex. The string to paste should look like this : 
+![alt text](./assets/fabric-rti-policy.png)
 3. New rows landing in `WeatherRaw` now flow automatically into `WeatherSilver`. Verify:
 
 #### Verify the Silver Table
@@ -1152,6 +1165,17 @@ WeatherSilver
 ```
 
 > Update policies run at ingestion time — historical rows already in `WeatherRaw` are **not** reprocessed automatically.
+
+#### Backfill Historical Rows
+
+Because the update policy only fires on new ingestion, rows that landed in `WeatherRaw` before the policy existed are missing from `WeatherSilver`. Reuse the same `WeatherRawToSilver()` function to backfill them in one command:
+
+```kql
+.set-or-append WeatherSilver <|
+WeatherRawToSilver()
+```
+
+> `.set-or-append` runs the transformation function over the existing raw data and appends the typed results, so `WeatherSilver` now contains both historical and newly streamed rows. Re-run the verify query above to confirm the older records appear.
 
 ### 8. Create a Dimension Table
 
@@ -1183,29 +1207,28 @@ WeatherSilver
 
 ### 9. Aggregate with a Materialized View
 
-A **materialized view** keeps a continuously updated aggregation for fast reads.
+A **materialized view** keeps a continuously updated projection for fast reads.
+If you read the table WeatherSilver, you will notice that the events in the EventStreams contain duplicate values per ObservedAt. Let's keep only one row per date observation — the latest values for each `ObservedAt`:
 
 ```kql
 .create materialized-view WeatherHourly on table WeatherSilver
 {
     WeatherSilver
-    | summarize
-        AvgTemperatureC = avg(TemperatureC),
-        MaxWindSpeedKmh = max(WindSpeedKmh),
-        AvgHumidity = avg(Humidity)
-      by City, bin(ObservedAt, 1h)
+    | summarize take_any(*) by ObservedAt
 }
 ```
+
+> `take_any(*) by ObservedAt` collapses every duplicate of the same timestamp into a single row. Because materialized views can't use non-deterministic functions such as `ingestion_time()`, this is the supported KQL pattern for keeping one value per key.
 
 Query the view like any table:
 
 ```kql
 WeatherHourly
 | order by ObservedAt desc
-| take 24
+| take 100
 ```
 
-> Materialized views are ideal for dashboards — they precompute aggregations so reports stay fast even as data grows.
+> Materialized views are ideal for dashboards — they precompute the deduplicated result so reports stay fast even as data grows.
 
 ### 10. Enable OneLake Availability and Link to a Lakehouse
 
