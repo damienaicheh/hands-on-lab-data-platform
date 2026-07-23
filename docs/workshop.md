@@ -817,10 +817,13 @@ This guide walks you through creating a **Fabric Data Agent** end to end: from s
 The **semantic model** defines the tables, relationships, and measures the agent understands.
 
 1. In the created workspace, from the item list, open the **semantic model** (Data model) item.
-2. Click **View Item Details** to see the tables and their **relationships**.
-3. Inspect key tables (for example, `Sales`, `Product`, `Customer`, `_Measures`).
-4. Review the **columns** (KPIs) defined on each table and **measures** in the dedicated table.
-5. Note the **naming** — clear, business-friendly names help the agent answer accurately.
+2. Here you can review the following elements:
+- Tables and their **relationships**.
+- Inspect key tables (for example, `Sales`, `Product`, `Customer`, `_Measures`).
+- Review the **columns** (KPIs) defined on each table and **measures** in the dedicated table.
+- Note the **naming** — clear, business-friendly names help the agent answer accurately.
+
+![semantic-model](./assets/fabric-iq-semantic-model-overview.png)
 
 > Good, descriptive table and column names dramatically improve the agent's accuracy.
 
@@ -833,65 +836,92 @@ The report shows how the data is used today and which metrics matter.
 3. Note how measures are **sliced** — by product, family/category, region, or time.
 4. Keep these KPIs in mind — they are the same questions you'll ask the agent.
 
+![report-overview](./assets/fabric-iq-power-bi-report-overview.png)
+
 ### 3. Create the Data Agent
+
+It's now time to create the agent that will answer questions about your data.
 
 1. In the workspace, select **+ New item**.
 2. Search for and choose **Data agent** (may appear under **Data Science** or **AI**).
 3. Give the agent a **name** (for example, `Sales Assistant`).
 4. Select **Create**. The Data Agent authoring canvas opens.
 
+![agent-canvas](./assets/fabric-iq-data-agent-authoring-canvas.png)
+
 ### 4. Add Data from the Semantic Model
 
 Give the agent something to reason over.
 
 1. In the agent canvas, select **Add data source** (or the **+** in the data sources pane).
-2. Choose your **semantic model** from step 3.
-3. Select the **tables** you want the agent to use : _Measures & Product at first. 
-4. Confirm. The agent now has access to those tables and measures.
+2. Choose your **semantic model** from previous step.
+3. Then, after it's loaded, select the **tables** you want the agent to use : `_Measures` & `Product` at first. 
+4. The agent now has access to those tables and measures.
 
 > Only add the tables the agent needs. Fewer, well-chosen tables produce clearer answers.
 
-### 5. Ask a First Question
+![agent-data-source](./assets/fabric-iq-select-data-table-for-agent.png)
+
+### 5. Ask a first question
 
 Test the agent with a simple, direct question.
 
 1. In the chat panel, type a question that maps to a known KPI, for example:
    > *"What are the total sales in 2025?"*
 2. Review the answer, and expand the **query/steps** the agent generated.
-3. Confirm the number matches the report from step 4.
+3. Confirm the number matches the report from previous step (in the Power BI report).
 
+<div class="tip" data-title="Tips">
+
+>
 > Always check the generated query the first few times to verify the agent's reasoning.
+>
 
-### 6. Add your First Instruction
+</div>
 
-**Instructions** teach the agent about your business context and how to behave.
+### 6. Add your first instruction
 
-1. Open the **Instructions** (or **AI instructions**) pane.
+Let's customize the agent's behavior using the **Instructions**. This teach the agent about your business context and how to behave.
+
+1. Click on the **Agent instructions** on top of the agent.
 2. Add a clear, plain-language rule, for example:
-   > *"'You are a Sales Analyst Agent responsible for insights and key influencers identifcation. Use a profesional tone. Come back with precise and short answers and do not try to invent any figures. "*
-3. **Save** the instructions.
+   > *"You are a Sales Analyst Agent responsible for insights and key influencers identifcation. Use a profesional tone. Come back with precise and short answers and do not try to invent any figures."*
+3. The save will be done automatically, and the agent will now follow your instructions.
 
+![agent-instructions](./assets/fabric-iq-agent-instructions.png)
 
 4. Verify the instruction took effect ; ask a question that relies on your new instruction, for example:
    > *"Show me sales by month."*
-6. Confirm the new tone.
+6. Confirm the new tone you should see something like this : 
+   ![agent-instructions-result](./assets/fabric-iq-agent-instructions-result.png)
 7. Reopen the instructions, erase what you have written, and replace it by what is written here : 
-    > *"'### General 
-    - You are a Sales Analyst Agent responsible for insights and key influencers identifcation. 
-    - Use a profesional tone. 
-    - Come back with precise and short answers and do not try to invent any figures. 
 
-    ### KPIs 
-    - When prompting answers about KPis, always provide sales in K€ (thousands) + percentages with 2 decimals after comma. 
-    - Sales Performance should always use the [Total Sales]
-    - When no date period is defined, use the current year value and propose a year to date when Growth is asked."* 
+```markdown
+### General 
+- You are a Sales Analyst Agent responsible for insights and key influencers identifcation. 
+- Use a profesional tone. 
+- Come back with precise and short answers and do not try to invent any figures. 
 
-8. Verify the instruction took effect ; ask the same question that relies on your new instruction :
+### KPIs 
+- When prompting answers about KPis, always provide sales in K€ (thousands) + percentages with 2 decimals after comma. 
+- Sales Performance should always use the [Total Sales]
+- When no date period is defined, use the current year value and propose a year to date when Growth is asked.
+```
+
+8. Verify the instruction took effect ; clear the chat with the top right button to start with an empty history and ask the same question that relies on your new instruction :
    > *"Show me sales by month."*
 
 9. Compare the result with the previous two instructions. 
+Now you should see a more precise answer with the right format, here is an example of what you should see : 
+   ![agent-instructions-result-2](./assets/fabric-iq-agent-instructions-result-2.png)
 
+<div class="tip" data-title="Tips">
+
+>
 > Instructions are the single most powerful lever for improving answer quality. Be specific.
+>
+
+</div>
 
 ### 7. Ask a Question About "Family"
 
@@ -900,21 +930,24 @@ Now test a term the agent may not yet understand, and teach the agent your domai
 1. Ask a question using business terminology, for example:
    > *"Which product family had the highest sales?"*
 2. Observe the result. If the agent misinterprets **"family"** (for example, confusing it with category or product name), that's expected — you'll fix it next.
-3. **Clear the session** with the broom at the top right of the page. Open the **Instructions** pane again.
-4. Add clarifying rules, for example:
-   > *"'### Tables 
-    - Sales is a fact table defining retail performance indicators  
-    - Products contains all sold products in the company. 
+3. Add clarifying rules, for example:
 
-    ##### Products 
-    - Family is a synonym for 'Product'[Category] column.
+```markdown
+### Tables 
+- Sales is a fact table defining retail performance indicators  
+- Products contains all sold products in the company. 
 
-    ##### Sales 
-    - When prompt refers to a country name, translate the country name to 2 characters country code ('France' ==> 'FR') and map to the Sales[Delivery Country] "*
-5. **Save**.
-6. Repeat the question from step 10:
+##### Products 
+- Family is a synonym for 'Product'[Category] column.
+
+##### Sales 
+- When prompt refers to a country name, translate the country name to 2 characters country code ('France' ==> 'FR') and map to the Sales[Delivery Country]
+```
+
+4. **Clear the session** with the broom at the top right of the page. Open the **Instructions** pane again.
+5. Repeat the question from previous step:
    > *"Which product family had the highest sales?"*
-7. Confirm the agent now groups by the correct **Product Family** column and returns an accurate answer.
+6. Confirm the agent now groups by the correct **Product Family** column and returns an accurate answer.
 
 > Compare before and after — this shows the direct impact of good instructions.
 
