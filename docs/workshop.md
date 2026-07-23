@@ -938,7 +938,7 @@ Now test a term the agent may not yet understand, and teach the agent your domai
 - Products contains all sold products in the company. 
 
 ##### Products 
-- Family is a synonym for 'Product'[Category] column.
+- Family is a synonym for 'Product'[Subcategory] column.
 
 ##### Sales 
 - When prompt refers to a country name, translate the country name to 2 characters country code ('France' ==> 'FR') and map to the Sales[Delivery Country]
@@ -947,9 +947,17 @@ Now test a term the agent may not yet understand, and teach the agent your domai
 4. **Clear the session** with the broom at the top right of the page. Open the **Instructions** pane again.
 5. Repeat the question from previous step:
    > *"Which product family had the highest sales?"*
-6. Confirm the agent now groups by the correct **Product Family** column and returns an accurate answer.
+6. Confirm the agent now groups by the correct **Product Subcategory** column and returns an accurate answer.
 
 > Compare before and after — this shows the direct impact of good instructions.
+
+<div class="tip" data-title="Tips">
+
+>
+> The agent is able to assume some functional pattern, but giving it a functional context will help it to understand the business context and the data model.
+>
+
+</div>
 
 
 ### 8. Add a Table from the Lakehouse
@@ -957,19 +965,21 @@ Now test a term the agent may not yet understand, and teach the agent your domai
 Extend the agent beyond the semantic model by adding raw data.
 
 1. In the data sources pane, select **Add data source** → **Lakehouse**.
-2. Choose the lakehouse you created in step 2.
-3. Under Schemas > mimosa_gravel > Tables, Select the tables named dim_return_reason and fact_returns.
-4. Confirm. 
+2. Choose the lakehouse you created in previous step.
+3. Under **Schemas** > **mimosa_gravel** > **Tables**, Select the tables named `dim_return_reason` and `fact_returns`. If tables doesn't appear, refresh the lakehouse by clicking on the refresh button next to the lakehouse name.
+4. It should look like this :
+
+![agent-data-source-lakehouse](./assets/fabric-iq-select-lakehouse-table-for-agent.png)
 
 > Data Agents can combine multiple sources — semantic models, lakehouses, and warehouses — in one agent.
 
 ### 9. Add a SQL Sample Query
 
-**Example queries** show the agent how to query a source correctly.
+Inside the **Setup** tab do to **Example queries** show the agent how to query a source correctly.
 
 1. In the Explorer on the left, you can now see a new menu called Example Queries. Open **Example queries**.
 2. Add a query and in the question, paste the following text : 
- >"'*Give me the quantity of product returned, by product category and return reason. "*
+ >"Give me the quantity of product returned, by product category and return reason."
 3. Add a representative query with a plain-language description, for example:
 
 ```sql
@@ -982,9 +992,11 @@ Extend the agent beyond the semantic model by adding raw data.
     GROUP BY category, reason
 ```
 
-4. **Save** the example.
+4. This will be auto saved.
 
-> Sample queries teach join patterns and column usage, improving accuracy for lakehouse/warehouse sources.
+![agent-example-query](./assets/fabric-iq-agent-example-query.png)
+
+> Sample queries teach join patterns and column usage, improving accuracy for lakehouse/warehouse sources. When an agent receive a question that is similar to a sample query, it will use the sample query as a reference to generate the answer.
 
 ### 10. Ask a Question Against the New Source
 
@@ -992,25 +1004,21 @@ Extend the agent beyond the semantic model by adding raw data.
    > *"Give me the quantity of product returned, by product category and return reason."*
 2. Confirm the agent uses the lakehouse table by taking a look at the steps completed, at then end of the answer, and check if it follows the pattern from your sample query.
 
-### 11. Generate a Visual
+![agent-example-query-result](./assets/fabric-iq-agent-example-query-result.png)
 
-1. Ask a question and request a chart, for example:
-   > *"Show sales by product family as a bar chart."*
-2. The agent returns a **visual** alongside the data.
-3. Try a few chart types (bar, line, pie) by rephrasing your request.
-
-> You can pin or export the generated visuals for reuse.
-
-### 12. Publish the Agent
+### 11. Publish the Agent
 
 Make the agent available to your users.
 
 1. In the agent canvas, select **Publish**.
-2. Add an optional **description** so users know what the agent can answer.
+2. Add a **description**, this is mandatory as it will allow other agent to consume this one as an external agent:
+> This agent analyses the sales across the retail operations of the mimosa gravel retailer.
 3. Confirm **Publish**.
-4. Share access with your audience:
-   - Open the workspace or the agent item and select **Share**.
-   - Grant the appropriate **permissions** (read/consume).
+4. Go back to your workspace and in the Data agent line, share access with your audience. Grant the appropriate **permissions**:
+    - **Share**: Share this data agent with other people. 
+    - **View Details**: View the configuration and settings, but make no changes.
+
+![agent-share](./assets/fabric-iq-agent-share.png)
 
 > Only users with permission to the underlying data sources can get answers. Verify sharing at both the agent and data-source level.
 
@@ -1026,13 +1034,19 @@ You have:
 6. Extended the agent with a **lakehouse table** and a **SQL sample query**.
 7. Generated a **visual** and **published** the agent.
 
-### Tips for Great Data Agents
+<div class="tip" data-title="Tips">
 
-- **Iterate on instructions** — most quality gains come from clear, specific instructions.
-- **Use business language** in table/column names and instructions.
-- **Add sample queries** for every non-trivial lakehouse/warehouse source.
-- **Verify generated queries** early to build trust in the answers.
-- **Keep sources focused** — add only the tables users actually ask about.
+>
+>### Tips for Great Data Agents
+>
+> - **Iterate on instructions** — most quality gains come from clear, specific instructions.
+> - **Use business language** in table/column names and instructions.
+> - **Add sample queries** for every non-trivial lakehouse/warehouse source.
+> - **Verify generated queries** early to build trust in the answers.
+> - **Keep sources focused** — add only the tables users actually ask about.
+>
+
+</div>
 
 ### Further Reading
 
