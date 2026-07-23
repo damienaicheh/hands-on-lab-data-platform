@@ -785,12 +785,14 @@ These files are located in the `src/seed_fabric` folder of the starter project y
 5. When the execution is done, close the notebook (top left **X**) you will automatically go back to the workspace. You should be able to see a new lakehouse, a semantic model, and a report inside your workspace. 
 ![first-import](./assets/fabric-iq-first-import.png)
 
-6. Open the **NB - Mimosa Gravel Data Generator** notebook. First, on the left pane, bind the notebook to the newly created lakehouse : 
+6. Open the **NB - Mimosa Gravel Data Generator** notebook. First, on the left pane, remove the old lakehouse (it always belongs to a lakehouse). Next to the error logo, click remove. 
+![remove-old](./assets/fabric-remove-old.png)
+7. Bind the notebook to the newly created lakehouse : 
 ![bind-notebook](./assets/fabric-bind-notebook-to-onelake.png)
 
-7. From the explorer, chose the right workspace, find the lakehouse, and check the corresponding box to bind it to the notebook. 
+8. From the explorer, chose the right workspace, find the lakehouse, and check the corresponding box to bind it to the notebook. Be careful, there are two similar items but with different icons. Take the one with waves in the design. 
 ![bind-notebook-2](./assets/fabric-bind-notebook-to-onelake-2.png)
-8. Once binded, you should see it on the left pane. 
+9. Once bound, you should see it on the left pane. 
 Obtain the **ABFS Path** of the **Files** folder:
 ![copy-path](./assets/fabric-copy-abffs-path.png)
 and copy it inplace of the BASE_PATH variable row 6 of the first notebook cell:
