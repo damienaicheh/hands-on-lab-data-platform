@@ -192,6 +192,21 @@ terraform apply -auto-approve
 
 The deployment should take a few minutes to complete.
 
+### Enable Fabric items and OpenAI in Microsoft Fabric 
+
+In order to use/develop any Fabric Items and use Fabric Data Agents, a few prerequisites must be respected. 
+
+1. You will need administrator rights on Fabric to enable Fabric items and OpenAI. Go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com) and sign in.
+2. On top right, open **Settings**, and at the bottom of the pane find **Admin Portal**
+3. In the left menu pane, find **Tenant Settings** (must be where you land by default, if you are fabric admin)
+4. Enable multiple features : (First one at the top) **Users can create Fabric items** (either for the entire organization, or for a specific security group)
+5. Select **Apply**.
+![alt text](./assets/fabric-enable-fabric-items.png)
+6. Now, using the search bar on the right type: `open`. 
+7. Enable all 4 menus in the **Copilot and Azure OpenAI Service** list. 
+![open-ai-service-enablement](./assets/fabric-enable-open-ai.png)
+8. Select **Apply** and leave the admin portal. 
+
 [ms-python-extension]: https://marketplace.visualstudio.com/items?itemName=ms-python.python
 [github-copilot-extension]: https://marketplace.visualstudio.com/items?itemName=GitHub.copilot
 [github-copilot-chat-extension]: https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat
@@ -729,22 +744,6 @@ You can test this easily by adding and removing yourself from the `Contoso-Restr
 ---
 
 ## Setup Fabric IQ
-
-
-### Enable Fabric items and OpenAI in Microsoft Fabric 
-
-In order to use/develop any Fabric Items and use Fabric Data Agents, a few prerequisites must be respected. 
-
-1. You will need administrator rights on Fabric to enable Fabric items and OpenAI. Go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com) and sign in.
-2. On top right, open **Settings**, and at the bottom of the pane find **Admin Portal**
-3. In the left menu pane, find **Tenant Settings** (must be where you land by default, if you are fabric admin)
-4. Enable multiple features : (First one at the top) **Users can create Fabric items** (either for the entire organization, or for a specific security group)
-5. Select **Apply**.
-![alt text](./assets/fabric-enable-fabric-items.png)
-6. Now, using the search bar on the right type: `open`. 
-7. Enable all 4 menus in the **Copilot and Azure OpenAI Service** list. 
-![open-ai-service-enablement](./assets/fabric-enable-open-ai.png)
-8. Select **Apply** and leave the admin portal. 
 
 ### Create a Workspace in a Fabric Capacity
 
@@ -1324,127 +1323,7 @@ You have:
 
 ---
 
-## Use the Fabric RTI MCP Server from the Command Line
-
-The **Fabric Real-Time Intelligence (RTI) MCP server** lets an AI agent talk to your **Eventhouse** in natural language — generating and running **KQL** — using the Model Context Protocol (MCP). In this module you'll run it entirely from a terminal with **GitHub Copilot CLI**, no VS Code required.
-
-> **What is MCP?**
-> The Model Context Protocol is an open standard that lets AI agents connect to external tools and data. The **Fabric RTI MCP** server targets Eventhouse, Eventstreams, Activator, and Map.
-
-## Prerequisites
-
-- A terminal (**Windows Terminal**, **PowerShell**, or **cmd**).
-- **Node.js** (for the Copilot CLI) and a GitHub account with Copilot enabled.
-- **uv** installed (Python package runner that launches the MCP server):
-  ```powershell
-  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-  ```
-- **Azure CLI** installed, for authentication. The MCP server uses `DefaultAzureCredential`.
-
-### 1. Sign In to Azure
-
-The MCP server authenticates as **you** via the Azure CLI login.
-
-```cmd
-az login
-```
-
-Complete the browser sign-in, then confirm your account:
-
-```cmd
-az account show
-```
-
-### 2. Install the GitHub Copilot CLI
-
-```cmd
-npm install -g @github/copilot
-```
-
-Start a session and authenticate with GitHub when prompted:
-
-```cmd
-copilot
-```
-
-> On first run, follow the device-code prompt to link your GitHub Copilot subscription.
-
-
-### 3. Get Your Eventhouse Query URI
-
-1. In Fabric, open your **Eventhouse** → **KQL database**.
-2. Copy the **Query URI** (looks like `https://<guid>.<region>.kusto.fabric.microsoft.com`).
-3. Note the **database name** (for example, `Weather_Eventhouse`).
-
-
-### 4. Register the Fabric RTI MCP Server
-
-Inside a Copilot CLI session, add the server interactively:
-
-```
-/mcp add
-```
-
-Or configure it manually by editing `~/.copilot/mcp-config.json` (on Windows: `%USERPROFILE%\.copilot\mcp-config.json`):
-
-```json
-{
-  "mcpServers": {
-    "fabric-rti-mcp": {
-      "command": "uvx",
-      "args": ["microsoft-fabric-rti-mcp"],
-      "env": {
-        "KUSTO_SERVICE_URI": "https://<your-eventhouse>.kusto.fabric.microsoft.com",
-        "KUSTO_SERVICE_DEFAULT_DB": "Weather_Eventhouse"
-      }
-    }
-  }
-}
-```
-
-Restart the CLI so it picks up the config, then list the loaded servers:
-
-```
-/mcp
-```
-
-You should see `fabric-rti-mcp` and its tools (`kusto_query`, `kusto_describe_database`, `kusto_sample_entity`, etc.).
-
-### 5. Ask Questions in Natural Language
-
-From the Copilot CLI prompt, ask questions that map to the KQL tables you built earlier:
-
-> *"List the tables in my Eventhouse database."*
-
-> *"Sample 10 rows from the WeatherSilver table."*
-
-> *"What was the average temperature per hour in Paris over the last 24 hours?"*
-
-> *"Show me the schema of the WeatherHourly materialized view."*
-
-The agent calls the RTI tools and shows the **generated KQL** before returning results — review it to verify the reasoning.
-
-
-### 6. (Optional) Run a One-Shot Prompt Without a Session
-
-You can also invoke Copilot CLI non-interactively from `cmd`, which is handy for scripts:
-
-```cmd
-copilot -p "Sample 10 rows from the WeatherSilver table in my Eventhouse"
-```
-
-
-### Summary
-
-- You authenticated with **`az login`** and installed the **GitHub Copilot CLI**.
-- You registered the **Fabric RTI MCP** server via `/mcp add` (or `mcp-config.json`).
-- You queried your Eventhouse in natural language — the agent generated and ran **KQL** for you, all from the terminal.
-
-### Further Reading
-
-- [Microsoft MCP servers catalog](https://github.com/microsoft/mcp)
-- [Fabric RTI MCP server](https://aka.ms/rti.mcp.repo)
-- [GitHub Copilot CLI documentation](https://docs.github.com/copilot/concepts/agents/about-copilot-cli)
+## Connect Fabric Data Agent to the orchestrator agent
 
 ---
 
