@@ -795,7 +795,7 @@ Obtain the **ABFS Path** of the **Files** folder:
 ![copy-path](./assets/fabric-copy-abffs-path.png)
 and copy it inplace of the BASE_PATH variable row 6 of the first notebook cell:
 ![replace-row-six](./assets/fabric-replace-row-six.png)
-9. Start the notebook using the Run All button at the top. 
+9. Start the notebook using the **Run all** button at the top. 
 10. Once over, come back to the workspace, and refresh the semantic model by using the refresh button next to the Semantic model name. 
 ![alt text](./assets/fabric-refresh-model.png)
 
