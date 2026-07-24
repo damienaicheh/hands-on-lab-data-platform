@@ -441,9 +441,10 @@ Find the second Lab 1 placeholder, replace it with:
 company_guidelines_tool = foundry_client.get_file_search_tool(
     vector_store_ids=[vector_store_id]
 )
+tools: List[ToolTypes] = [company_guidelines_tool]
 ```
 
-Here the pieces come together: the chat client drives the model and the tool gives the agent explicit access to the guidelines. The agent starts with an empty `context_providers` list, you will update it later.
+Here the pieces come together: the chat client drives the model and the tool gives the agent explicit access to the guidelines. You gather the tools in a single `tools` list because later labs (the Fabric Data Agent) append more tools to that same list. The agent starts with an empty `context_providers` list, you will update it later.
 
 Find the last Lab 1 placeholder, replace it with:
 
@@ -452,7 +453,7 @@ orchestrator_agent = Agent(
     name=agent_name,
     client=foundry_client,
     context_providers=context_providers,
-    tools=[company_guidelines_tool],
+    tools=tools,
 )
 ```
 
@@ -745,22 +746,22 @@ You can test this easily by adding and removing yourself from the `Contoso-Restr
 
 ## Setup Fabric IQ
 
-### What we will do in this labs : 
+### What you will learn in this lab
 
 In order to demonstrate the capabilities of Agentic Features in Microsoft Fabric, we first need to deploy a set of items : 
-- We will create a fabric workpsace to regroup all of our items in the same functional container. 
-- We will upload two notebooks to automate the creation of the necessary items (Storage Layer, Semantic Layer, Reports)
-- And we will load fake data. Data represents an international bike retailer : multi-channel sellers, across different points of sales, and analysis of Sales, Returns, and patterns for products or customers. 
+- You will create a fabric workpsace to regroup all of our items in the same functional container. 
+- You will upload two notebooks to automate the creation of the necessary items (Storage Layer, Semantic Layer, Reports)
+- And you will load fake data. Data represents an international bike retailer : multi-channel sellers, across different points of sales, and analysis of Sales, Returns, and patterns for products or customers. 
 
-In order to be efficient with our Fabric Data Agent and be able to analyse our business, we first need to deploy the AI-Ready data layer.
+In order to be efficient with your Fabric Data Agent and be able to analyse our business, you first need to deploy the AI-Ready data layer.
 
-Once the fundations are prepared, we will then create a Fabric Data Agent, benefit from the semantic model, enhence it's understanding of the model with instructions, increase it's scope of action thanks to data in the Lakehouse, and even teach how to query data in specific case, to decrease halucinations and increase deterministic analysis. 
+Once the fundations are prepared, you will then create a Fabric Data Agent, benefit from the semantic model, enhence it's understanding of the model with instructions, increase it's scope of action thanks to data in the Lakehouse, and even teach how to query data in specific case, to decrease halucinations and increase deterministic analysis. 
 
-### Create a Workspace in a Fabric Capacity
+### Create a workspace in a Fabric Capacity
 
 A workspace is the container for all your Fabric items (notebooks, models, reports, and agents).
 
-1. Go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com/home?experience=fabric-developer) and sign in.
+1. Go to [Fabric Portal](https://app.fabric.microsoft.com/home?experience=fabric-developer) and sign in.
 2. Click on **+ New workspace**.
 3. Give it a clear **name** (for example, `Data Agent Workshop`).
 ![fabric-workspace-new](./assets/fabric-iq-create-workspace-capacity-part-1.png)
@@ -889,6 +890,9 @@ Test the agent with a simple, direct question.
 
 </div>
 
+You can check it in the Power BI report here:
+![report-check](./assets/fabric-iq-sales-agent-result-power-bi-report-check.png)
+
 ### 6. Add your first instruction
 
 Let's customize the agent's behavior using the **Instructions**. This teach the agent about your business context and how to behave.
@@ -1016,22 +1020,6 @@ Inside the **Setup** tab do to **Example queries** show the agent how to query a
 
 ![agent-example-query-result](./assets/fabric-iq-agent-example-query-result.png)
 
-### 11. Publish the Agent
-
-Make the agent available to your users.
-
-1. In the agent canvas, select **Publish**.
-2. Add a **description**, this is mandatory as it will allow other agent to consume this one as an external agent:
-> This agent analyses the sales across the retail operations of the mimosa gravel retailer.
-3. Confirm **Publish**.
-4. Go back to your workspace and in the Data agent line, share access with your audience. Grant the appropriate **permissions**:
-    - **Share**: Share this data agent with other people. 
-    - **View Details**: View the configuration and settings, but make no changes.
-
-![agent-share](./assets/fabric-iq-agent-share.png)
-
-> Only users with permission to the underlying data sources can get answers. Verify sharing at both the agent and data-source level.
-
 ### Summary
 
 You have:
@@ -1042,12 +1030,11 @@ You have:
 4. Created a **Data Agent** and added a **semantic model** source.
 5. Improved answers with **instructions** and domain **vocabulary**.
 6. Extended the agent with a **lakehouse table** and a **SQL sample query**.
-7. Generated a **visual** and **published** the agent.
 
 <div class="tip" data-title="Tips">
 
 >
->### Tips for Great Data Agents
+> Tips for great data agents
 >
 > - **Iterate on instructions** — most quality gains come from clear, specific instructions.
 > - **Use business language** in table/column names and instructions.
@@ -1068,12 +1055,118 @@ You have:
 
 ## Connect Fabric Data Agent to the orchestrator agent
 
+Your orchestrator already reasons over the company guidelines and the Foundry IQ knowledge base. In this lab, you give it a new tool: querying the **Fabric Sales Data Agent** you published earlier. Instead of duplicating the sales logic inside the orchestrator, you expose the Fabric agent as a tool through its **Model Context Protocol (MCP)** endpoint, so the orchestrator can delegate any sales or product question to it and combine the answer with the rest of its context.
+
+### Publish the Fabric Data Agent
+
+The first things you need to do, is to make the agent available to your users. Go back to your Fabric workspace and select your **Sales Assistant** data agent.
+
+1. In the agent canvas, select **Publish**.
+2. Add a **description**, this is mandatory as it will allow other agent to consume this one as an external agent:
+> This agent analyses the sales across the retail operations of the mimosa gravel retailer.
+3. Confirm **Publish**.
+4. Go back to your workspace and in the Data agent line, share access with your audience. Grant the appropriate **permissions**:
+    - **Share**: Share this data agent with other people. 
+    - **View Details**: View the configuration and settings, but make no changes.
+
+![agent-share](./assets/fabric-iq-agent-share.png)
+
+> Only users with permission to the underlying data sources can get answers. Verify sharing at both the agent and data-source level.
+
+### Files To Open
+
+You stay in the same file as the previous labs:
+
+- `src/agents/main.py`
+- `src/.env`
+
+### Get the MCP endpoint
+
+A published Fabric Data Agent exposes a single MCP tool over streamable HTTP. You need its endpoint URL before you can call it.
+
+1. Go back to [Fabric Portal](https://app.fabric.microsoft.com) and open the **Sales Assistant** data agent you published in the previous lab.
+2. Open its **Settings** and go to the **Model Context Protocol** tab.
+3. Copy the **MCP server URL**. It follows this pattern:
+
+![fabric-mcp-endpoint](./assets/fabric-iq-sales-assistant-mcp.png)
+
+4. Paste it into your `.env` file as `FABRIC_SALES_AGENT_ENDPOINT`.
+
+### Acquire a Fabric Token
+
+Every request to the MCP endpoint must carry a bearer token for the Fabric API. Unlike the other Azure SDK clients you used so far, the MCP transport is a plain HTTP client, so you acquire the token yourself and pass it in the `Authorization` header.
+
+Open `src/agents/main.py` and find the first placeholder, right below the `credential` creation. Replace it with:
+
+```python
+async def get_fabric_token() -> str:
+    access_token = await credential.get_token(
+        "https://api.fabric.microsoft.com/.default"
+    )
+    return access_token.token
+```
+
+The `https://api.fabric.microsoft.com/.default` scope is what tells Microsoft Entra you want a token for the Fabric API. Because it reuses the same `credential` as the rest of the app, the Fabric agent runs with the caller identity, and it only answers when that identity has access to the workspace and the data agent.
+
+### Register the Fabric Data Agent as a tool
+
+Now turn the MCP endpoint into a tool the orchestrator can call. Find the second placeholder and replace it with:
+
+```python
+fabric_token = asyncio.run(get_fabric_token())
+fabric_http_client = AsyncClient(
+    follow_redirects=True,
+    timeout=Timeout(30.0, read=300.0),
+    headers={"Authorization": f"Bearer {fabric_token}"},
+)
+fabric_sales_agent = FabricDataAgentMCPTool(
+    name="Sales Agent",
+    description="A sales agent that can provide information about products and sales reports.",
+    url=fabric_sales_agent_endpoint,
+    http_client=fabric_http_client,
+)
+tools.append(fabric_sales_agent)
+```
+
+You build a dedicated `AsyncClient` with the `Authorization` header so that **every** request the MCP transport makes — the initial handshake, the tool discovery, and each tool call — carries the token. The generous read timeout leaves the data agent enough time to translate your question into a query and run it. Appending the tool to the `tools` list you created in the first labs is what makes it available to the orchestrator alongside the guidelines tool.
+
+<div class="tip" data-title="Why a custom FabricDataAgentMCPTool?">
+
+> The tool uses `FabricDataAgentMCPTool` (provided in `src/agents/utils/fabric_mcp_tool.py`) instead of the framework's `MCPStreamableHTTPTool`. The Fabric MCP server does not implement the JSON-RPC `ping` health-check yet as the service is in preview at the time of writing this lab and answers it with an HTTP `400`, which would tear down the connection. The custom subclass simply skips that proactive ping while keeping the normal reconnect-and-retry behavior.
+
+</div>
+
+The `description` matters: it is what the orchestrator model reads to decide when to route a question to the Fabric agent, so it should clearly state what the agent knows.
+
+### Run The Agent
+
+```bash
+cd src/agents
+uv run python main.py
+```
+
+DevUI opens again, this time with the orchestrator wired to the guidelines tool, the identity-aware search provider, and the Fabric Data Agent.
+
+<div class="task" data-title="Validation">
+
+> Ask a sales question that only the Fabric Data Agent can answer, for example: *"What are the total sales in 2025?"*
+>
+> Confirm the orchestrator calls the **Sales Agent** tool and returns the figure from Fabric (formatted in K€, following the instructions you gave the data agent).
+
+</div>
+
+If it answers correctly, you should see:
+
+![fabric-iq-agent-sales-answer](./assets/orchestrator-agent-calling-fabric-agent.png)
+
+You now have a multi-agent system: a Foundry orchestrator that grounds its answers on company guidelines and knowledge bases, and delegates business questions to a Fabric Data Agent over MCP.
+
 ---
 
 ## Bonus: Discover Microsoft Fabric RTI (Real-Time Intelligence) 
 
 
-### What we will do in this labs : 
+### What you will learn in this lab
 
 This guide walks you through building a **Real-Time Intelligence (RTI)** solution in Microsoft Fabric: streaming live weather data into an **Eventstream**, landing it in an **Eventhouse**, shaping it with **KQL**, and exposing it to a **Lakehouse** through **OneLake availability**.
 
@@ -1082,8 +1175,8 @@ This guide walks you through building a **Real-Time Intelligence (RTI)** solutio
 > RTI is the Fabric workload for ingesting, storing, and analyzing high-volume, time-based data. **Eventstreams** move events, **Eventhouses/KQL databases** store and query them at scale, and **KQL** (Kusto Query Language) powers fast analytics over streaming data.
 
 The goal of the lab is to present the basics of Event House and real time data management :  
-- We will ingest data via a dedicated data stream called Event Stream 
-- We will implement a Medaillon-like Architecture : 
+- You will ingest data via a dedicated data stream called Event Stream 
+- You will implement a Medaillon-like Architecture : 
     - Store Raw Data into a first layer, as-is, without any transformation or filters 
     - Refine Data in a dedicated table, and auto update via Update Policies new data in a Silver Layer. We will also present a way to ingest historical data with functions. 
     - Present data to end users via Materialized Views, automated storage layer that will benefit from aggregations and scalar functions 
