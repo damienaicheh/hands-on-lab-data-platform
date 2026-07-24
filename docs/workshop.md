@@ -745,6 +745,17 @@ You can test this easily by adding and removing yourself from the `Contoso-Restr
 
 ## Setup Fabric IQ
 
+### What we will do in this labs : 
+
+In order to demonstrate the capabilities of Agentic Features in Microsoft Fabric, we first need to deploy a set of items : 
+- We will create a fabric workpsace to regroup all of our items in the same functional container. 
+- We will upload two notebooks to automate the creation of the necessary items (Storage Layer, Semantic Layer, Reports)
+- And we will load fake data. Data represents an international bike retailer : multi-channel sellers, across different points of sales, and analysis of Sales, Returns, and patterns for products or customers. 
+
+In order to be efficient with our Fabric Data Agent and be able to analyse our business, we first need to deploy the AI-Ready data layer.
+
+Once the fundations are prepared, we will then create a Fabric Data Agent, benefit from the semantic model, enhence it's understanding of the model with instructions, increase it's scope of action thanks to data in the Lakehouse, and even teach how to query data in specific case, to decrease halucinations and increase deterministic analysis. 
+
 ### Create a Workspace in a Fabric Capacity
 
 A workspace is the container for all your Fabric items (notebooks, models, reports, and agents).
@@ -1061,11 +1072,22 @@ You have:
 
 ## Bonus: Discover Microsoft Fabric RTI (Real-Time Intelligence) 
 
+
+### What we will do in this labs : 
+
 This guide walks you through building a **Real-Time Intelligence (RTI)** solution in Microsoft Fabric: streaming live weather data into an **Eventstream**, landing it in an **Eventhouse**, shaping it with **KQL**, and exposing it to a **Lakehouse** through **OneLake availability**.
 
 > **What is Real-Time Intelligence?**
 >
 > RTI is the Fabric workload for ingesting, storing, and analyzing high-volume, time-based data. **Eventstreams** move events, **Eventhouses/KQL databases** store and query them at scale, and **KQL** (Kusto Query Language) powers fast analytics over streaming data.
+
+The goal of the lab is to present the basics of Event House and real time data management :  
+- We will ingest data via a dedicated data stream called Event Stream 
+- We will implement a Medaillon-like Architecture : 
+    - Store Raw Data into a first layer, as-is, without any transformation or filters 
+    - Refine Data in a dedicated table, and auto update via Update Policies new data in a Silver Layer. We will also present a way to ingest historical data with functions. 
+    - Present data to end users via Materialized Views, automated storage layer that will benefit from aggregations and scalar functions 
+    - And Eventually expose our Real Time data with Batch data from our Lakehouse via One Lake Availability.   
 
 ### 1. Create an Eventhouse
 
