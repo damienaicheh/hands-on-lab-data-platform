@@ -1116,14 +1116,16 @@ Route the stream into the Eventhouse as a **raw landing (bronze) table**.
 4. Pick **Create new** in **KQL Destination table**. 
 5. Create a new destination table named `WeatherRaw` and click **Save**:
 ![fabric-rti-new-table](./assets/fabric-rti-new-table.png)
-6. At top right corner, click **Publish** the Eventstream and confirm events start flowing.
+6. At top right corner, click **Publish** the Eventstream and confirm events start flowing. You should see something like this:
+![fabric-rti-eventstream-published](./assets/fabric-rti-eventstream-published.png)
 7. Come back to the Event House (either from the workspace, or from the quick menu). 
-8. Open the KQL Database, and click on the query set. (If you followed the naming, it would be called `Weather_EventHouse_queryset`)
-9. Wait a minute or two, then verify rows arrive with `WeatherRaw | count`.
+8. On the left, open the KQL Database, and click on the query set. (If you followed the naming, it would be called `Weather_EventHouse_queryset`)
+9. Wait a minute or two, then verify rows arrive inside it by removing default queries and replace it with `WeatherRaw | count`. You should see something like this (the number of rows will vary based on how long you waited):
+![fabric-rti-eventhouse-verify](./assets/fabric-rti-eventhouse-verify.png)
 
 ### 5. Query the Data Using KQL
 
-1. In the Eventhouse, open the **KQL database** and select **New query set** (or use the **Explore your data** query editor).
+1. Stay in the Eventhouse and let's continue to do some queries.
 2. Run a few basic queries:
 
 ```kql
@@ -1139,12 +1141,20 @@ WeatherRaw
 
 > `ingestion_time()` is a hidden column that tells you when each record landed — handy for validating a live stream.
 
+![fabric-rti-eventhouse-queries](./assets/fabric-rti-eventhouse-queries.png)
+
 3. KQL database comes with a lot of functions and inline command. To check the schema of the table, use the following code : `WeatherRaw | getschema`
 4. Notice that the raw schema comes from the EventStream handling. 
 
+![fabric-rti-eventhouse-queries-schema](./assets/fabric-rti-eventhouse-queries-schema.png)
+
 ### 6. Create a Second-Layer (Silver) Table
 
+#### Create the WeatherSilver Table
+
 Shape the raw JSON into a clean, typed **silver table**. The `WeatherRaw` table exposes the fields sent by the Real-time Weather source: scalar columns (such as `relativeHumidity`, `uvIndex`, `cloudCover`, `hasPrecipitation`, `daytime`) and dynamic objects (such as `temperature`, `wind`, `dewPoint`) that wrap their reading in a `value` property.
+
+Run this query to create a typed table with the fields for the `WeatherSilver` table:
 
 ```kql
 .create table WeatherSilver (
@@ -1166,11 +1176,11 @@ Shape the raw JSON into a clean, typed **silver table**. The `WeatherRaw` table 
 
 > Typed columns make queries faster and enable relationships with dimension data.
 
-### 7. Use an Update Policy to Populate the Silver Table
+#### Use an Update Policy to Populate the Silver Table
 
 An **update policy** automatically transforms rows from the raw table into the silver table on ingestion.
 
-1. Create a transformation function that maps raw JSON to typed columns:
+1. Create a transformation function that maps raw JSON to typed columns, copy paste and run the following code in the KQL query window:
 
 ```kql
 .create function WeatherRawToSilver() {
@@ -1192,11 +1202,12 @@ An **update policy** automatically transforms rows from the raw table into the s
 }
 ```
 
-2. Attach the update policy to `WeatherSilver`, sourced from `WeatherRaw`:
+2. Attach the update policy to `WeatherSilver`, sourced from `WeatherRaw`, run the following code in the KQL query window:
 
-````kql
+```kql
+
 .alter table WeatherSilver policy update
-```
+\```
 [
   {
     "IsEnabled": true,
@@ -1206,13 +1217,14 @@ An **update policy** automatically transforms rows from the raw table into the s
     "PropagateIngestionProperties": false
   }
 ]
+\```
 
-````
-> The workshop markdown tends to render the code with backquote complex. The string to paste should look like this : 
+```
+
+> The workshop markdown tends to render the code with backquote complex. The string to paste should look like this (without the backslash before the backquotes): 
 ![alt text](./assets/fabric-rti-policy.png)
-3. New rows landing in `WeatherRaw` now flow automatically into `WeatherSilver`. Verify:
 
-#### Verify the Silver Table
+3. New rows landing in `WeatherRaw` now flow automatically into `WeatherSilver`. Run the following query to verify (it can take a few seconds for the first rows to appear):
 
 ```kql
 WeatherSilver
@@ -1220,6 +1232,8 @@ WeatherSilver
 ```
 
 > Update policies run at ingestion time — historical rows already in `WeatherRaw` are **not** reprocessed automatically.
+
+![fabric-rti-eventhouse-verify-silver](./assets/fabric-rti-eventhouse-verify-silver.png)
 
 #### Backfill Historical Rows
 
