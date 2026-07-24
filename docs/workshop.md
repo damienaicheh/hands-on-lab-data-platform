@@ -23,14 +23,57 @@ audience: developers, architects, AI engineers
 
 ## What You Will Learn
 
+Throughout this workshop, you will build a **multi-agent AI data platform** for the fictional *Contoso* / *Mimosa Gravel* retailer. A single **orchestrator agent** answers business questions by grounding its reasoning on company knowledge and by delegating specialized questions to a dedicated Fabric Data Agent, the whole system being reachable from a local chat UI.
+
 ### Architecture
 
-Orchestrator Agent => Agent Fabric => Sell, products..
-                   => Agent Foundry => New products, discounts, other..
+The orchestrator agent is the single entry point the user talks to. It combines three complementary capabilities you build lab after lab:
 
+- **Company guidelines** — a managed vector store in Foundry IQ that keeps product and sales reports aligned with the company standards.
+- **Company documents** — an identity-aware Foundry IQ knowledge base over Azure AI Search, where per-user document permissions are enforced at retrieval time.
+- **Business data** — a Fabric Data Agent, connected over MCP, that answers sales and product questions from a semantic model and a lakehouse.
+
+```mermaid
+flowchart LR
+    User(["👤 User"])
+
+    subgraph Orchestration["🧠 Orchestration"]
+        Orchestrator["Orchestrator Agent<br/><small>Foundry · Agent Framework · DevUI</small>"]
+    end
+
+    subgraph FoundryIQ["📚 Foundry IQ"]
+        VS["Managed Vector Store<br/><small>Report guidelines</small>"]
+        KB["Knowledge Base<br/><small>Azure AI Search · identity-aware</small>"]
+    end
+
+    subgraph FabricIQ["📊 Fabric IQ"]
+        Fabric["Fabric Data Agent<br/><small>Semantic model · Lakehouse</small>"]
+    end
+
+    User -->|asks a question| Orchestrator
+    Orchestrator -->|report guidelines| VS
+    Orchestrator -->|company documents| KB
+    Orchestrator -->|"sales & products (MCP)"| Fabric
+
+    classDef user fill:#0f6cbd,stroke:#0a4d8c,color:#fff,font-weight:bold;
+    classDef agent fill:#5c2e91,stroke:#3d1e61,color:#fff,font-weight:bold;
+    classDef foundry fill:#e8f1fb,stroke:#0f6cbd,color:#0a3d66;
+    classDef fabric fill:#e9f7ef,stroke:#107c41,color:#0a4d2a;
+
+    class User user;
+    class Orchestrator agent;
+    class VS,KB foundry;
+    class Fabric fabric;
+```
 
 ### Key Technologies
 
+- **Microsoft Foundry** & **Foundry IQ** — agent hosting, managed vector stores, knowledge sources and bases, and agentic retrieval.
+- **Microsoft Agent Framework** & **DevUI** — building the orchestrator agent and testing it locally without writing a front-end.
+- **Azure AI Search** — vector and semantic search with document-level security trimming.
+- **Microsoft Fabric** & **Fabric Data Agents** — natural-language querying over a semantic model and a lakehouse.
+- **Model Context Protocol (MCP)** — connecting the orchestrator agent to the Fabric Data Agent.
+- Bonus: Discover **Microsoft Fabric RTI** — real-time ingestion and analytics with Eventstream, Eventhouse, and KQL.
 
 ---
 
