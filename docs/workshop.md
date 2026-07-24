@@ -1064,9 +1064,7 @@ This guide walks you through building a **Real-Time Intelligence (RTI)** solutio
 
 ### Prerequisites
 
-- A **Microsoft Fabric** tenant with a **Fabric Capacity** (F2 or higher, or a trial).
 - Permissions to create RTI items (Eventstream, Eventhouse) in your workspace.
-- The workspace created earlier in this workshop.
 
 ### 1. Create an Eventhouse
 
@@ -1077,6 +1075,9 @@ The **Eventhouse** is the storage and analytics engine. Creating one automatical
 3. Give it a name (for example, `Weather_Eventhouse`) and select **Create**.
 4. When it opens, note the **KQL database** created inside it (same name by default). You'll write all KQL against this database.
 
+You should see something like this:
+![fabric-rti-eventhouse](./assets/fabric-rti-eventhouse.png)
+
 > The Eventhouse can hold many KQL databases. For this workshop we use the default one.
 
 ### 2. Create an Eventstream
@@ -1086,29 +1087,35 @@ The **Eventstream** ingests events from a source and routes them to destinations
 1. In your workspace, select **+ New item**.
 2. Search for and choose **Eventstream**.
 3. Give it a name (for example, `Weather_Eventstream`) and select **Create**.
-4. The Eventstream authoring canvas opens with an empty **Source → Destination** design surface.
+4. The Eventstream authoring canvas opens with an empty **Source → Destination** design surface:
 
+![fabric-rti-eventstream](./assets/fabric-rti-eventstream.png)
 
 ### 3. Add a Real-Time Weather Source (Paris, FR)
 
 1. On the canvas, select **Add source** → **Connect Datasource** 
 2. Chose **Real-time Weather** in the list of Recommended Datasources.
-3. Name the source (for example, `Paris_Weather`).
-4. In the location pane, chose Paris in France. 
-![fabric-rti-datasource]](./assets/fabric-rti-datasource.png)
-5. Back in the workflow, click the datasource, and look at the Data Preview pane at the bottom. You should see live data. 
-> Keep the raw JSON shape in mind — you'll map these fields in KQL next.
+![fabric-rti-datasource-list](./assets/fabric-rti-datasource-list.png)
+3. In the location pane, search for **Paris** and choose Paris in France.
+4. Name the source (for example, `Paris_Weather`).
+![fabric-rti-datasource](./assets/fabric-rti-weather-datasource.png)
+5. Click **Next** and then **Add** to add the source to the canvas.
+6. You should see the datasource created and look at the Data Preview pane at the bottom. You should see live data:
+![fabric-rti-datasource-preview](./assets/fabric-rti-weather-datasource-preview.png)
+
+> The raw data you see with JSON will be used to map the fields in KQL in the next steps.
 
 ### 4. Load Data into a Raw Table in the Eventhouse
 
 Route the stream into the Eventhouse as a **raw landing (bronze) table**.
 
 1. On the Eventstream canvas, select **Transform events or add destionation** and at the bottom, chose **Eventhouse**.
+![fabric-rti-eventhouse-destination](./assets/fabric-rti-eventhouse-destination.png)
 2. Choose **Event processing before ingestion** (or **Direct ingestion**).
-3. Select your **workspace**, the **Eventhouse** previously created, and the **KQL database** from step 1.
+3. Select your **workspace**, the **Eventhouse** previously created, and the **KQL database**
 4. Pick **Create new** in **KQL Destination table**. 
-![fabric-rti-new-table]](./assets/fabric-rti-new-table.png)
-5. Create a new destination table named `WeatherRaw` and click Save.
+5. Create a new destination table named `WeatherRaw` and click **Save**:
+![fabric-rti-new-table](./assets/fabric-rti-new-table.png)
 6. At top right corner, click **Publish** the Eventstream and confirm events start flowing.
 7. Come back to the Event House (either from the workspace, or from the quick menu). 
 8. Open the KQL Database, and click on the query set. (If you followed the naming, it would be called `Weather_EventHouse_queryset`)
