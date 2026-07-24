@@ -12,6 +12,7 @@ dependencies = [
     "agent-framework-orchestrations==1.0.0",
     "agent-framework-azure-ai-search==1.0.0b260521",
     "azure-ai-projects==2.2.0",
+    "mcp==1.28.1",
 ]
 
 [tool.uv]
