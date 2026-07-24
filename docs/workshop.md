@@ -1055,16 +1055,17 @@ You have:
 
 ---
 
-## Build a Real Time use case in Microsoft Fabric 
+## Connect Fabric Data Agent to the orchestrator agent
+
+---
+
+## Bonus: Discover Microsoft Fabric RTI (Real-Time Intelligence) 
 
 This guide walks you through building a **Real-Time Intelligence (RTI)** solution in Microsoft Fabric: streaming live weather data into an **Eventstream**, landing it in an **Eventhouse**, shaping it with **KQL**, and exposing it to a **Lakehouse** through **OneLake availability**.
 
 > **What is Real-Time Intelligence?**
+>
 > RTI is the Fabric workload for ingesting, storing, and analyzing high-volume, time-based data. **Eventstreams** move events, **Eventhouses/KQL databases** store and query them at scale, and **KQL** (Kusto Query Language) powers fast analytics over streaming data.
-
-### Prerequisites
-
-- Permissions to create RTI items (Eventstream, Eventhouse) in your workspace.
 
 ### 1. Create an Eventhouse
 
@@ -1246,7 +1247,7 @@ WeatherRawToSilver()
 
 > `.set-or-append` runs the transformation function over the existing raw data and appends the typed results, so `WeatherSilver` now contains both historical and newly streamed rows. Re-run the verify query above to confirm the older records appear.
 
-### 8. Create a Dimension Table
+#### Create a Dimension Table
 
 Add descriptive **dimension** data to enrich the weather facts.
 
@@ -1274,7 +1275,7 @@ WeatherSilver
 
 > Dimension tables let you filter and group weather metrics by country, region, or coordinates.
 
-### 9. Aggregate with a Materialized View
+### 7. Aggregate with a Materialized View
 
 A **materialized view** keeps a continuously updated projection for fast reads.
 If you read the table WeatherSilver, you will notice that the events in the EventStreams contain duplicate values per ObservedAt. Let's keep only one row per date observation — the latest values for each `ObservedAt`:
@@ -1299,16 +1300,19 @@ WeatherHourly
 
 > Materialized views are ideal for dashboards — they precompute the deduplicated result so reports stay fast even as data grows.
 
-### 10. Enable OneLake Availability and Link to a Lakehouse
+### 8. Enable OneLake Availability and Link to a Lakehouse
 
 Expose the KQL data in **OneLake** so a **Lakehouse** (and other engines) can read it.
 
 1. In the Eventhouse, open the **KQL database** settings.
 2. Turn on **OneLake availability** (Delta Lake) for the database (or for specific tables such as `WeatherSilver`).
+![fabric-rti-onelake-availability](./assets/fabric-rti-onelake-availability.png)
 3. Wait for the mirroring status to show the tables are available in OneLake.
-4. Open (or create) a **Lakehouse** in the workspace.
-5. Under **Tables**, select **New shortcut** → **Microsoft OneLake**.
-6. Browse to your **KQL database**, select the `WeatherSilver` (and `DimCity`) tables, and create the shortcut.
+![fabric-rti-onelake-availability-status](./assets/fabric-rti-onelake-availability-status.png)
+4. Create a **Lakehouse** in the workspace and call it `LH_WeatherSilver`.
+5. Under **Tables**, select **New shortcut** → **Microsoft OneLake** and leave default options.
+![fabric-rti-new-shortcut](./assets/fabric-rti-new-shortcut.png)
+6. Browse to your **KQL database**, select the `WeatherSilver` and `DimCity` tables, and create the shortcut.
 7. Confirm the tables appear in the Lakehouse and can be queried with **SQL** or a **notebook** — no data copy required.
 
 > OneLake availability writes KQL data as Delta tables, so the same weather data is instantly usable across Lakehouse, Warehouse, and Power BI.
@@ -1325,13 +1329,17 @@ You have:
 6. Aggregated data with a **materialized view**.
 7. Enabled **OneLake availability** and linked the data to a **Lakehouse** via a shortcut.
 
-### Tips for Great Real-Time Solutions
+<div class="tip" data-title="Tips">
 
-- **Land raw, transform in layers** — keep a bronze table, then refine with update policies.
-- **Use update policies** for lightweight, per-ingestion transformations; use materialized views for aggregations.
-- **Type your columns** in silver tables for faster queries and cleaner joins.
-- **Enable OneLake availability** to share streaming data across Fabric without copies.
-- **Bin by time** (`bin(Timestamp, 1h)`) to power time-series dashboards efficiently.
+>
+> - **Land raw, transform in layers** — keep a bronze table, then refine with update policies.
+> - **Use update policies** for lightweight, per-ingestion transformations; use materialized views for aggregations.
+> - **Type your columns** in silver tables for faster queries and cleaner joins.
+> - **Enable OneLake availability** to share streaming data across Fabric without copies.
+> - **Bin by time** (`bin(Timestamp, 1h)`) to power time-series dashboards efficiently.
+>
+
+</div>
 
 ### Further Reading
 
@@ -1342,9 +1350,6 @@ You have:
 - [Materialized views](https://learn.microsoft.com/kusto/management/materialized-views/materialized-view-overview)
 - [OneLake availability for KQL databases](https://learn.microsoft.com/fabric/real-time-intelligence/one-logical-copy)
 
----
-
-## Connect Fabric Data Agent to the orchestrator agent
 
 ---
 
