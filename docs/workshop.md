@@ -515,7 +515,7 @@ You only need to edit this file:
 
 Open `src/foundry_iq/main_knowledge_base.py` and find the Lab 2 placeholder inside `create_web_knowledge_source(...)`.
 
-A web knowledge source lets the agent ground its answers in live documentation instead of guessing. The allow and block lists matter: you explicitly trust `learn.microsoft.com` (including its subpages) and explicitly refuse `bing.com`, so the agent cannot wander onto general search results. This keeps answers relevant and predictable.
+A web knowledge source lets the agent ground its answers in live documentation instead of guessing. The allow and block lists matter: you explicitly trust `bing.com` (including its subpages) and explicitly refuse `google.com`, so the agent cannot wander onto general search results. This keeps answers relevant and predictable.
 
 Replace it with:
 
@@ -528,11 +528,12 @@ knowledge_source = WebKnowledgeSource(
         domains=WebKnowledgeSourceDomains(
             allowed_domains=[
                 WebKnowledgeSourceDomain(
-                    address="learn.microsoft.com", include_subpages=True
+                    address="bing.com", include_subpages=True
                 )
             ],
             blocked_domains=[
-                WebKnowledgeSourceDomain(address="bing.com", include_subpages=False)
+                WebKnowledgeSourceDomain(address="facebook.com", include_subpages=True),
+                WebKnowledgeSourceDomain(address="x.com", include_subpages=True),
             ],
         )
     ),
