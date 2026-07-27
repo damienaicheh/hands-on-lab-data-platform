@@ -1,8 +1,7 @@
 # Contoso Sales Report Writing Guidelines
 
 These guidelines describe how to write sales reports for the Contoso product catalog.
-They ensure that revenue, volume, and performance figures are presented consistently
-across teams and reporting periods.
+They ensure that revenue, volume, and performance figures are presented consistently across teams and reporting periods.
 
 ## 1. Reporting Period and Scope
 
