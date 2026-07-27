@@ -73,3 +73,5 @@ AzuriteConfig
 **/local.settings.json
 
 generated_labs/*
+
+**/*.drawio.bkp

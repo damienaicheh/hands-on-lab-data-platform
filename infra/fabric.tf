@@ -6,7 +6,7 @@ resource "azurerm_fabric_capacity" "this" {
   administration_members = [data.azuread_user.current.user_principal_name]
 
   sku {
-    name = "F2"
+    name = "F16"
     tier = "Fabric"
   }
 

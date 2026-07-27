@@ -57,11 +57,12 @@ def create_web_knowledge_source(index_client: SearchIndexClient) -> None:
             domains=WebKnowledgeSourceDomains(
                 allowed_domains=[
                     WebKnowledgeSourceDomain(
-                        address="learn.microsoft.com", include_subpages=True
+                        address="bing.com", include_subpages=True
                     )
                 ],
                 blocked_domains=[
-                    WebKnowledgeSourceDomain(address="bing.com", include_subpages=False)
+                    WebKnowledgeSourceDomain(address="facebook.com", include_subpages=True),
+                    WebKnowledgeSourceDomain(address="x.com", include_subpages=True),
                 ],
             )
         ),

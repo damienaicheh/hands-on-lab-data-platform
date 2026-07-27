@@ -14,24 +14,35 @@ contacts: # Required. Must match the number of authors
   - "@viguyonv"
 duration_minutes: 300
 tags: microsoft foundry, fabric, foundry iq, fabric iq, agent framework, mcp, ai search, foundry iq, dev-ui, csu, codespace, devcontainer
-navigation_levels: 2
+navigation_levels: 3
 banner_url: assets/banner.jpg
 audience: developers, architects, AI engineers
-
 ---
 
 # Product Hands-on Lab - AI Data Platform
 
 ## What You Will Learn
 
+Throughout this workshop, you will build a **multi-agent AI data platform** for the fictional *Contoso* / *Mimosa Gravel* retailer. A single **orchestrator agent** answers business questions by grounding its reasoning on company knowledge and by delegating specialized questions to a dedicated Fabric Data Agent, the whole system being reachable from a local chat UI.
+
 ### Architecture
 
-Orchestrator Agent => Agent Fabric => Sell, products..
-                   => Agent Foundry => New products, discounts, other..
+The orchestrator agent is the single entry point the user talks to. It combines three complementary capabilities you build lab after lab:
 
+- **Company guidelines** — a managed vector store in Foundry IQ that keeps product and sales reports aligned with the company standards.
+- **Company documents** — an identity-aware Foundry IQ knowledge base over Azure AI Search, where per-user document permissions are enforced at retrieval time.
+- **Business data** — a Fabric Data Agent, connected over MCP, that answers sales and product questions from a semantic model and a lakehouse.
+
+![architecture](./assets/architecture.jpg)
 
 ### Key Technologies
 
+- **Microsoft Foundry** & **Foundry IQ** — agent hosting, managed vector stores, knowledge sources and bases, and agentic retrieval.
+- **Microsoft Agent Framework** & **DevUI** — building the orchestrator agent and testing it locally without writing a front-end.
+- **Azure AI Search** — vector and semantic search with document-level security trimming.
+- **Microsoft Fabric** & **Fabric Data Agents** — natural-language querying over a semantic model and a lakehouse.
+- **Model Context Protocol (MCP)** — connecting the orchestrator agent to the Fabric Data Agent.
+- Bonus: Discover **Microsoft Fabric RTI** — real-time ingestion and analytics with Eventstream, Eventhouse, and KQL.
 
 ---
 
@@ -66,7 +77,7 @@ To use a GitHub Codespace, you will need :
 
 - [A GitHub Account][github-account]
 
-Create a new GitHub repository, unzip the starter project and push it to your new repository. Then, you can create a new GitHub Codespace from your repository.
+Create a **new GitHub repository** in your GitHub account, unzip the starter project and push it to your new repository. Then, you can create a new GitHub Codespace from your repository.
 
 GitHub Codespace offers the ability to run a complete dev environment (Visual Studio Code, Extensions, Tools, Secure port forwarding etc.) on a dedicated virtual machine.
 The configuration for the environment is defined in the `.devcontainer` folder, making sure everyone gets to develop and practice on identical environments : No more conflict on dependencies or missing tools !
@@ -75,7 +86,7 @@ Every GitHub account (even the free ones) grants access to 120 vcpu hours per mo
 
 To get your codespace ready for the labs, here are a few steps to execute :
 
-- After you forked the repo, click on `<> Code`, `Codespaces` tab and then click on the `+` button:
+- After you pushed the code to your new repository, click on `<> Code`, `Codespaces` tab and then click on the `+` button:
 
 ![codespace-new](./assets/codespace-new.png)
 
@@ -92,10 +103,9 @@ Here are the required tools to do so :
 - [Docker Desktop][docker-desktop] running
 - [Visual Studio Code][vs-code] installed on your machine
 
-Start by cloning the repository you just forked on your local Machine and open the local folder in Visual Studio Code.
-Once you have cloned the repository locally, make sure Docker Desktop is up and running and open the cloned repository in Visual Studio Code.  
+Make sure Docker Desktop is up and running and open the cloned repository in Visual Studio Code.
 
-You will be prompted to open the project in a Dev Container. Click on `Reopen in Container`.
+Unzip the starter project and open the local folder in Visual Studio Code. You will be prompted to open the project in a Dev Container. Click on `Reopen in Container`.
 
 If you are not prompted by Visual Studio Code, you can open the command palette (`Ctrl + Shift + P`) and search for `Reopen in Container` and select it:
 
@@ -130,7 +140,7 @@ Visual Studio Code Extensions to install :
 - [ms-python.debugpy][ms-python-debugpy-extension]
 - [hashicorp.terraform][hashicorp-terraform-extension]
 
-Once you have set up your local environment, you can clone the repository you just forked on your machine, and open the local folder in Visual Studio Code and head to the next step.
+Once you have set up your local environment, you can unzip the starter project on your machine, and open the local folder in Visual Studio Code and head to the next step.
 
 ### Sign in to Azure
 
@@ -194,6 +204,21 @@ terraform apply -auto-approve
 
 The deployment should take a few minutes to complete.
 
+### Enable Fabric items and OpenAI in Microsoft Fabric 
+
+In order to use/develop any Fabric Items and use Fabric Data Agents, a few prerequisites must be respected. 
+
+1. You will need administrator rights on Fabric to enable Fabric items and OpenAI. Go to [https://app.fabric.microsoft.com](https://app.fabric.microsoft.com) and sign in.
+2. On top right, open **Settings**, and at the bottom of the pane find **Admin Portal**
+3. In the left menu pane, find **Tenant Settings** (must be where you land by default, if you are fabric admin)
+4. Enable multiple features : (First one at the top) **Users can create Fabric items** (either for the entire organization, or for a specific security group)
+5. Select **Apply**.
+![alt text](./assets/fabric-enable-fabric-items.png)
+6. Now, using the search bar on the right type: `open`. 
+7. Enable all 4 menus in the **Copilot and Azure OpenAI Service** list. 
+![open-ai-service-enablement](./assets/fabric-enable-open-ai.png)
+8. Select **Apply** and leave the admin portal. 
+
 [ms-python-extension]: https://marketplace.visualstudio.com/items?itemName=ms-python.python
 [github-copilot-extension]: https://marketplace.visualstudio.com/items?itemName=GitHub.copilot
 [github-copilot-chat-extension]: https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat
@@ -218,7 +243,7 @@ The deployment should take a few minutes to complete.
 
 ---
 
-## Set up your environment
+## Setup Foundry IQ
 
 ### The starter project
 
@@ -428,9 +453,10 @@ Find the second Lab 1 placeholder, replace it with:
 company_guidelines_tool = foundry_client.get_file_search_tool(
     vector_store_ids=[vector_store_id]
 )
+tools: List[ToolTypes] = [company_guidelines_tool]
 ```
 
-Here the pieces come together: the chat client drives the model and the tool gives the agent explicit access to the guidelines. The agent starts with an empty `context_providers` list, you will update it later.
+Here the pieces come together: the chat client drives the model and the tool gives the agent explicit access to the guidelines. You gather the tools in a single `tools` list because later labs (the Fabric Data Agent) append more tools to that same list. The agent starts with an empty `context_providers` list, you will update it later.
 
 Find the last Lab 1 placeholder, replace it with:
 
@@ -439,7 +465,7 @@ orchestrator_agent = Agent(
     name=agent_name,
     client=foundry_client,
     context_providers=context_providers,
-    tools=[company_guidelines_tool],
+    tools=tools,
 )
 ```
 
@@ -489,7 +515,7 @@ You only need to edit this file:
 
 Open `src/foundry_iq/main_knowledge_base.py` and find the Lab 2 placeholder inside `create_web_knowledge_source(...)`.
 
-A web knowledge source lets the agent ground its answers in live documentation instead of guessing. The allow and block lists matter: you explicitly trust `learn.microsoft.com` (including its subpages) and explicitly refuse `bing.com`, so the agent cannot wander onto general search results. This keeps answers relevant and predictable.
+A web knowledge source lets the agent ground its answers in live documentation instead of guessing. The allow and block lists matter: you explicitly trust `bing.com` (including its subpages) and explicitly refuse `google.com`, so the agent cannot wander onto general search results. This keeps answers relevant and predictable.
 
 Replace it with:
 
@@ -502,11 +528,12 @@ knowledge_source = WebKnowledgeSource(
         domains=WebKnowledgeSourceDomains(
             allowed_domains=[
                 WebKnowledgeSourceDomain(
-                    address="learn.microsoft.com", include_subpages=True
+                    address="bing.com", include_subpages=True
                 )
             ],
             blocked_domains=[
-                WebKnowledgeSourceDomain(address="bing.com", include_subpages=False)
+                WebKnowledgeSourceDomain(address="facebook.com", include_subpages=True),
+                WebKnowledgeSourceDomain(address="x.com", include_subpages=True),
             ],
         )
     ),
@@ -730,32 +757,736 @@ You can test this easily by adding and removing yourself from the `Contoso-Restr
 
 ---
 
-## Fabric IQ
+## Setup Fabric IQ
 
-- TODO
-- Connect the orchestrator agent to the Fabric IQ agent
+### What you will learn in this lab
+
+In order to demonstrate the capabilities of Agentic Features in Microsoft Fabric, we first need to deploy a set of items : 
+- You will create a fabric workpsace to regroup all of our items in the same functional container. 
+- You will upload two notebooks to automate the creation of the necessary items (Storage Layer, Semantic Layer, Reports)
+- And you will load fake data. Data represents an international bike retailer : multi-channel sellers, across different points of sales, and analysis of Sales, Returns, and patterns for products or customers. 
+
+In order to be efficient with your Fabric Data Agent and be able to analyse our business, you first need to deploy the AI-Ready data layer.
+
+Once the fundations are prepared, you will then create a Fabric Data Agent, benefit from the semantic model, enhence it's understanding of the model with instructions, increase it's scope of action thanks to data in the Lakehouse, and even teach how to query data in specific case, to decrease halucinations and increase deterministic analysis. 
+
+### Create a workspace in a Fabric Capacity
+
+A workspace is the container for all your Fabric items (notebooks, models, reports, and agents).
+
+1. Go to [Fabric Portal](https://app.fabric.microsoft.com/home?experience=fabric-developer) and sign in.
+2. Click on **+ New workspace**.
+3. Give it a clear **name** (for example, `Data Agent Workshop`).
+![fabric-workspace-new](./assets/fabric-iq-create-workspace-capacity-part-1.png)
+4. In the **Details**, choose your **Fabric capacity**. It must be the one in the resource group you deployed for this workshop.
+![fabric-workspace-new-capacity](./assets/fabric-iq-create-workspace-capacity-part-2.png)
+5. Leave the rest of the options as default. Select **Apply**.
+
+<div class="warning" data-title="Important">
+
+> The workspace **must** be assigned to a Fabric capacity — Data Agents will not run on a Pro/shared workspace.
+
+</div>
+
+### Import the Notebooks
+
+You will import **two** notebooks that quick start the labs, create all the items, and load data into your environment:
+
+- **NB - Bootstrap Workspace** — orchestrates the setup: creates the lakehouse, rebinds and runs the data notebook, then creates the semantic model and report.
+- **NB - Mimosa Gravel Data Generator** — the data generator/loader that builds the lakehouse tables you'll query. It is run automatically by the Bootstrap notebook, so you don't run it yourself.
+
+These files are located in the `src/seed_fabric` folder of the starter project you cloned.
+
+1. Inside your new workspace, select **Import** → **Notebook** → **From this computer** (or **Upload**).
+2. Choose **both** provided `.ipynb` notebooks and confirm. Make sure they both appear in the workspace before continuing.
+![fabric-workspace-import-notebooks](./assets/fabric-iq-import-notebooks.png)
+3. Open the **NB - Bootstrap Workspace** notebook.
+4. At the top, click **Run all** to execute every cell. Wait for the notebook to finish before continuing. 
+
+
+> The Bootstrap notebook automatically generates the necessary items to be able to create the data agent, but it does not create data. We now need to generate our data ! 
+
+5. When the execution is done, close the notebook (top left **X**) you will automatically go back to the workspace. You should be able to see a new lakehouse, a semantic model, and a report inside your workspace. 
+![first-import](./assets/fabric-iq-first-import.png)
+
+6. Open the **NB - Mimosa Gravel Data Generator** notebook. First, on the left pane, remove the old lakehouse (it always belongs to a lakehouse). Next to the error logo, click remove. 
+![remove-old](./assets/fabric-remove-old.png)
+7. Bind the notebook to the newly created lakehouse : 
+![bind-notebook](./assets/fabric-bind-notebook-to-onelake.png)
+
+8. From the explorer, chose the right workspace, find the lakehouse, and check the corresponding box to bind it to the notebook. Be careful, there are two similar items but with different icons. Take the one with waves in the design. 
+![bind-notebook-2](./assets/fabric-bind-notebook-to-onelake-2.png)
+9. Once bound, you should see it on the left pane. 
+Obtain the **ABFS Path** of the **Files** folder:
+![copy-path](./assets/fabric-copy-abffs-path.png)
+and copy it inplace of the BASE_PATH variable row 6 of the first notebook cell:
+![replace-row-six](./assets/fabric-replace-row-six.png)
+9. Start the notebook using the **Run all** button at the top. 
+10. Once over, come back to the workspace, and refresh the semantic model by using the refresh button next to the Semantic model name. 
+![alt text](./assets/fabric-refresh-model.png)
+
+> The Generate data notebook populates with fake data our Sales & Retail Model. We are now ready to start working with a Data Agent ! 
 
 ---
 
-## Ontology
+## Build and Use a Microsoft Fabric Data Agent
 
-- Ontology
+This guide walks you through creating a **Fabric Data Agent** end to end: from setting up a workspace to publishing an agent that answers natural-language questions over your data.
+
+> **What is a Fabric Data Agent?**
+> A Fabric Data Agent lets business users ask questions about their data in plain language. It uses AI to translate questions into queries against your semantic models, lakehouses, and warehouses, then returns answers, tables, and visuals. 
+
+### 1. Open the Data Model and Look at the Tables
+
+The **semantic model** defines the tables, relationships, and measures the agent understands.
+
+1. In the created workspace, from the item list, open the **semantic model** (Data model) item.
+2. Here you can review the following elements:
+- Tables and their **relationships**.
+- Inspect key tables (for example, `Sales`, `Product`, `Customer`, `_Measures`).
+- Review the **columns** (KPIs) defined on each table and **measures** in the dedicated table.
+- Note the **naming** — clear, business-friendly names help the agent answer accurately.
+
+![semantic-model](./assets/fabric-iq-semantic-model-overview.png)
+
+> Good, descriptive table and column names dramatically improve the agent's accuracy.
+
+### 2. Open the Report and Understand the KPIs
+
+The report shows how the data is used today and which metrics matter.
+
+1. Open the **Power BI report** in the workspace.
+2. Review the main **KPIs** (for example, total sales, revenue by category, sales by family).
+3. Note how measures are **sliced** — by product, family/category, region, or time.
+4. Keep these KPIs in mind — they are the same questions you'll ask the agent.
+
+![report-overview](./assets/fabric-iq-power-bi-report-overview.png)
+
+### 3. Create the Data Agent
+
+It's now time to create the agent that will answer questions about your data.
+
+1. In the workspace, select **+ New item**.
+2. Search for and choose **Data agent** (may appear under **Data Science** or **AI**).
+3. Give the agent a **name** (for example, `Sales Assistant`).
+4. Select **Create**. The Data Agent authoring canvas opens.
+
+![agent-canvas](./assets/fabric-iq-data-agent-authoring-canvas.png)
+
+### 4. Add Data from the Semantic Model
+
+Give the agent something to reason over.
+
+1. In the agent canvas, select **Add data source** (or the **+** in the data sources pane).
+2. Choose your **semantic model** from previous step.
+3. Then, after it's loaded, select the **tables** you want the agent to use : `_Measures` & `Product` at first. 
+4. The agent now has access to those tables and measures.
+
+> Only add the tables the agent needs. Fewer, well-chosen tables produce clearer answers.
+
+![agent-data-source](./assets/fabric-iq-select-data-table-for-agent.png)
+
+### 5. Ask a first question
+
+Test the agent with a simple, direct question.
+
+1. In the chat panel, type a question that maps to a known KPI, for example:
+   > *"What are the total sales in 2025?"*
+2. Review the answer, and expand the **query/steps** the agent generated.
+3. Confirm the number matches the report from previous step (in the Power BI report).
+
+<div class="tip" data-title="Tips">
+
+>
+> Always check the generated query the first few times to verify the agent's reasoning.
+>
+
+</div>
+
+You can check it in the Power BI report here:
+![report-check](./assets/fabric-iq-sales-agent-result-power-bi-report-check.png)
+
+### 6. Add your first instruction
+
+Let's customize the agent's behavior using the **Instructions**. This teach the agent about your business context and how to behave.
+
+1. Click on the **Agent instructions** on top of the agent.
+2. Add a clear, plain-language rule, for example:
+   > *"You are a Sales Analyst Agent responsible for insights and key influencers identifcation. Use a profesional tone. Come back with precise and short answers and do not try to invent any figures."*
+3. The save will be done automatically, and the agent will now follow your instructions.
+
+![agent-instructions](./assets/fabric-iq-agent-instructions.png)
+
+4. Verify the instruction took effect ; ask a question that relies on your new instruction, for example:
+   > *"Show me sales by month."*
+6. Confirm the new tone you should see something like this : 
+   ![agent-instructions-result](./assets/fabric-iq-agent-instructions-result.png)
+7. Reopen the instructions, erase what you have written, and replace it by what is written here : 
+
+```markdown
+### General 
+- You are a Sales Analyst Agent responsible for insights and key influencers identifcation. 
+- Use a profesional tone. 
+- Come back with precise and short answers and do not try to invent any figures. 
+
+### KPIs 
+- When prompting answers about KPis, always provide sales in K€ (thousands) + percentages with 2 decimals after comma. 
+- Sales Performance should always use the [Total Sales]
+- When no date period is defined, use the current year value and propose a year to date when Growth is asked.
+```
+
+8. Verify the instruction took effect ; clear the chat with the top right button to start with an empty history and ask the same question that relies on your new instruction :
+   > *"Show me sales by month."*
+
+9. Compare the result with the previous two instructions. 
+Now you should see a more precise answer with the right format, here is an example of what you should see : 
+   ![agent-instructions-result-2](./assets/fabric-iq-agent-instructions-result-2.png)
+
+<div class="tip" data-title="Tips">
+
+>
+> Instructions are the single most powerful lever for improving answer quality. Be specific.
+>
+
+</div>
+
+### 7. Ask a Question About "Family"
+
+Now test a term the agent may not yet understand, and teach the agent your domain vocabulary.
+
+1. Ask a question using business terminology, for example:
+   > *"Which product family had the highest sales?"*
+2. Observe the result. If the agent misinterprets **"family"** (for example, confusing it with category or product name), that's expected — you'll fix it next.
+3. Add clarifying rules, for example:
+
+```markdown
+### Tables 
+- Sales is a fact table defining retail performance indicators  
+- Products contains all sold products in the company. 
+
+##### Products 
+- Family is a synonym for 'Product'[Subcategory] column.
+
+##### Sales 
+- When prompt refers to a country name, translate the country name to 2 characters country code ('France' ==> 'FR') and map to the Sales[Delivery Country]
+```
+
+4. **Clear the session** with the broom at the top right of the page. Open the **Instructions** pane again.
+5. Repeat the question from previous step:
+   > *"Which product family had the highest sales?"*
+6. Confirm the agent now groups by the correct **Product Subcategory** column and returns an accurate answer.
+
+> Compare before and after — this shows the direct impact of good instructions.
+
+<div class="tip" data-title="Tips">
+
+>
+> The agent is able to assume some functional pattern, but giving it a functional context will help it to understand the business context and the data model.
+>
+
+</div>
+
+
+### 8. Add a Table from the Lakehouse
+
+Extend the agent beyond the semantic model by adding raw data.
+
+1. In the data sources pane, select **Add data source** → **Lakehouse**.
+2. Choose the lakehouse you created in previous step.
+3. Under **Schemas** > **mimosa_gravel** > **Tables**, Select the tables named `dim_return_reason` and `fact_returns`. If tables doesn't appear, refresh the lakehouse by clicking on the refresh button next to the lakehouse name.
+4. It should look like this :
+
+![agent-data-source-lakehouse](./assets/fabric-iq-select-lakehouse-table-for-agent.png)
+
+> Data Agents can combine multiple sources — semantic models, lakehouses, and warehouses — in one agent.
+
+### 9. Add a SQL Sample Query
+
+Inside the **Setup** tab do to **Example queries** show the agent how to query a source correctly.
+
+1. In the Explorer on the left, you can now see a new menu called Example Queries. Open **Example queries**.
+2. Add a query and in the question, paste the following text : 
+ >"Give me the quantity of product returned, by product category and return reason."
+3. Add a representative query with a plain-language description, for example:
+
+```sql
+    SELECT DISTINCT category, reason, COUNT(1) AS quantity
+    FROM mimosa_gravel.fact_returns AS r
+    LEFT OUTER JOIN mimosa_gravel.dim_product AS p
+    ON r.product_key = p.product_key
+    LEFT OUTER JOIN mimosa_gravel.dim_return_reason AS rr
+    ON r.return_reason_key = rr.return_reason_key
+    GROUP BY category, reason
+```
+
+4. This will be auto saved.
+
+![agent-example-query](./assets/fabric-iq-agent-example-query.png)
+
+> Sample queries teach join patterns and column usage, improving accuracy for lakehouse/warehouse sources. When an agent receive a question that is similar to a sample query, it will use the sample query as a reference to generate the answer.
+
+### 10. Ask a Question Against the New Source
+
+1. Ask a question that requires the lakehouse table, for example:
+   > *"Give me the quantity of product returned, by product category and return reason."*
+2. Confirm the agent uses the lakehouse table by taking a look at the steps completed, at then end of the answer, and check if it follows the pattern from your sample query.
+
+![agent-example-query-result](./assets/fabric-iq-agent-example-query-result.png)
+
+### Summary
+
+You have:
+
+1. Created a capacity-backed **workspace**.
+2. Imported and run a **notebook** to build data.
+3. Explored the **semantic model** and **KPIs**.
+4. Created a **Data Agent** and added a **semantic model** source.
+5. Improved answers with **instructions** and domain **vocabulary**.
+6. Extended the agent with a **lakehouse table** and a **SQL sample query**.
+
+<div class="tip" data-title="Tips">
+
+>
+> Tips for great data agents
+>
+> - **Iterate on instructions** — most quality gains come from clear, specific instructions.
+> - **Use business language** in table/column names and instructions.
+> - **Add sample queries** for every non-trivial lakehouse/warehouse source.
+> - **Verify generated queries** early to build trust in the answers.
+> - **Keep sources focused** — add only the tables users actually ask about.
+>
+
+</div>
+
+### Further Reading
+
+- [Fabric Data Agent overview](https://learn.microsoft.com/fabric/data-science/concept-data-agent)
+- [Create a Fabric Data Agent](https://learn.microsoft.com/fabric/data-science/how-to-create-data-agent)
+- [Data Agent instructions and best practices](https://learn.microsoft.com/fabric/data-science/data-agent-scenario)
 
 ---
 
-## Fabric RTI
+## Connect Fabric Data Agent to the orchestrator agent
 
-- Realtime ingestion
+Your orchestrator already reasons over the company guidelines and the Foundry IQ knowledge base. In this lab, you give it a new tool: querying the **Fabric Sales Data Agent** you published earlier. Instead of duplicating the sales logic inside the orchestrator, you expose the Fabric agent as a tool through its **Model Context Protocol (MCP)** endpoint, so the orchestrator can delegate any sales or product question to it and combine the answer with the rest of its context.
+
+### Publish the Fabric Data Agent
+
+The first things you need to do, is to make the agent available to your users. Go back to your Fabric workspace and select your **Sales Assistant** data agent.
+
+1. In the agent canvas, select **Publish**.
+2. Add a **description**, this is mandatory as it will allow other agent to consume this one as an external agent:
+> This agent analyses the sales across the retail operations of the mimosa gravel retailer.
+3. Confirm **Publish**.
+4. Go back to your workspace and in the Data agent line, share access with your audience. Grant the appropriate **permissions**:
+    - **Share**: Share this data agent with other people. 
+    - **View Details**: View the configuration and settings, but make no changes.
+
+![agent-share](./assets/fabric-iq-agent-share.png)
+
+> Only users with permission to the underlying data sources can get answers. Verify sharing at both the agent and data-source level.
+
+### Files To Open
+
+You stay in the same file as the previous labs:
+
+- `src/agents/main.py`
+- `src/.env`
+
+### Get the MCP endpoint
+
+A published Fabric Data Agent exposes a single MCP tool over streamable HTTP. You need its endpoint URL before you can call it.
+
+1. Go back to [Fabric Portal](https://app.fabric.microsoft.com) and open the **Sales Assistant** data agent you published in the previous lab.
+2. Open its **Settings** and go to the **Model Context Protocol** tab.
+3. Copy the **MCP server URL**. It follows this pattern:
+
+![fabric-mcp-endpoint](./assets/fabric-iq-sales-assistant-mcp.png)
+
+4. Paste it into your `.env` file as `FABRIC_SALES_AGENT_ENDPOINT`.
+
+### Acquire a Fabric Token
+
+Every request to the MCP endpoint must carry a bearer token for the Fabric API. Unlike the other Azure SDK clients you used so far, the MCP transport is a plain HTTP client, so you acquire the token yourself and pass it in the `Authorization` header.
+
+Open `src/agents/main.py` and find the first placeholder, right below the `credential` creation. Replace it with:
+
+```python
+async def get_fabric_token() -> str:
+    access_token = await credential.get_token(
+        "https://api.fabric.microsoft.com/.default"
+    )
+    return access_token.token
+```
+
+The `https://api.fabric.microsoft.com/.default` scope is what tells Microsoft Entra you want a token for the Fabric API. Because it reuses the same `credential` as the rest of the app, the Fabric agent runs with the caller identity, and it only answers when that identity has access to the workspace and the data agent.
+
+### Register the Fabric Data Agent as a tool
+
+Now turn the MCP endpoint into a tool the orchestrator can call. Find the second placeholder and replace it with:
+
+```python
+fabric_token = asyncio.run(get_fabric_token())
+fabric_http_client = AsyncClient(
+    follow_redirects=True,
+    timeout=Timeout(30.0, read=300.0),
+    headers={"Authorization": f"Bearer {fabric_token}"},
+)
+fabric_sales_agent = FabricDataAgentMCPTool(
+    name="Sales Agent",
+    description="A sales agent that can provide information about products and sales reports.",
+    url=fabric_sales_agent_endpoint,
+    http_client=fabric_http_client,
+)
+tools.append(fabric_sales_agent)
+```
+
+You build a dedicated `AsyncClient` with the `Authorization` header so that **every** request the MCP transport makes — the initial handshake, the tool discovery, and each tool call — carries the token. The generous read timeout leaves the data agent enough time to translate your question into a query and run it. Appending the tool to the `tools` list you created in the first labs is what makes it available to the orchestrator alongside the guidelines tool.
+
+<div class="tip" data-title="Why a custom FabricDataAgentMCPTool?">
+
+> The tool uses `FabricDataAgentMCPTool` (provided in `src/agents/utils/fabric_mcp_tool.py`) instead of the framework's `MCPStreamableHTTPTool`. The Fabric MCP server does not implement the JSON-RPC `ping` health-check yet as the service is in preview at the time of writing this lab and answers it with an HTTP `400`, which would tear down the connection. The custom subclass simply skips that proactive ping while keeping the normal reconnect-and-retry behavior.
+
+</div>
+
+The `description` matters: it is what the orchestrator model reads to decide when to route a question to the Fabric agent, so it should clearly state what the agent knows.
+
+### Run The Agent
+
+```bash
+cd src/agents
+uv run python main.py
+```
+
+DevUI opens again, this time with the orchestrator wired to the guidelines tool, the identity-aware search provider, and the Fabric Data Agent.
+
+<div class="task" data-title="Validation">
+
+> Ask a sales question that only the Fabric Data Agent can answer, for example: *"What are the total sales in 2025?"*
+>
+> Confirm the orchestrator calls the **Sales Agent** tool and returns the figure from Fabric (formatted in K€, following the instructions you gave the data agent).
+
+</div>
+
+If it answers correctly, you should see:
+
+![fabric-iq-agent-sales-answer](./assets/orchestrator-agent-calling-fabric-agent.png)
+
+You now have a multi-agent system: a Foundry orchestrator that grounds its answers on company guidelines and knowledge bases, and delegates business questions to a Fabric Data Agent over MCP.
 
 ---
 
-## MCP
+## Bonus: Discover Microsoft Fabric RTI (Real-Time Intelligence) 
 
-MCP Dev (Optional)
-MCP Fabric => Consommer BDD / RTI / Données
-MCP Agentic 
+
+### What you will learn in this lab
+
+This guide walks you through building a **Real-Time Intelligence (RTI)** solution in Microsoft Fabric: streaming live weather data into an **Eventstream**, landing it in an **Eventhouse**, shaping it with **KQL**, and exposing it to a **Lakehouse** through **OneLake availability**.
+
+> **What is Real-Time Intelligence?**
+>
+> RTI is the Fabric workload for ingesting, storing, and analyzing high-volume, time-based data. **Eventstreams** move events, **Eventhouses/KQL databases** store and query them at scale, and **KQL** (Kusto Query Language) powers fast analytics over streaming data.
+
+The goal of the lab is to present the basics of Event House and real time data management :  
+- You will ingest data via a dedicated data stream called Event Stream 
+- You will implement a Medaillon-like Architecture : 
+    - Store Raw Data into a first layer, as-is, without any transformation or filters 
+    - Refine Data in a dedicated table, and auto update via Update Policies new data in a Silver Layer. We will also present a way to ingest historical data with functions. 
+    - Present data to end users via Materialized Views, automated storage layer that will benefit from aggregations and scalar functions 
+    - And Eventually expose our Real Time data with Batch data from our Lakehouse via One Lake Availability.   
+
+### 1. Create an Eventhouse
+
+The **Eventhouse** is the storage and analytics engine. Creating one automatically provisions a **KQL database**.
+
+1. In your workspace, select **+ New item**.
+2. Search for and choose **Eventhouse**.
+3. Give it a name (for example, `Weather_Eventhouse`) and select **Create**.
+4. When it opens, note the **KQL database** created inside it (same name by default). You'll write all KQL against this database.
+
+You should see something like this:
+![fabric-rti-eventhouse](./assets/fabric-rti-eventhouse.png)
+
+> The Eventhouse can hold many KQL databases. For this workshop we use the default one.
+
+### 2. Create an Eventstream
+
+The **Eventstream** ingests events from a source and routes them to destinations.
+
+1. In your workspace, select **+ New item**.
+2. Search for and choose **Eventstream**.
+3. Give it a name (for example, `Weather_Eventstream`) and select **Create**.
+4. The Eventstream authoring canvas opens with an empty **Source → Destination** design surface:
+
+![fabric-rti-eventstream](./assets/fabric-rti-eventstream.png)
+
+### 3. Add a Real-Time Weather Source (Paris, FR)
+
+1. On the canvas, select **Add source** → **Connect Datasource** 
+2. Chose **Real-time Weather** in the list of Recommended Datasources.
+![fabric-rti-datasource-list](./assets/fabric-rti-datasource-list.png)
+3. In the location pane, search for **Paris** and choose Paris in France.
+4. Name the source (for example, `Paris_Weather`).
+![fabric-rti-datasource](./assets/fabric-rti-weather-datasource.png)
+5. Click **Next** and then **Add** to add the source to the canvas.
+6. You should see the datasource created and look at the Data Preview pane at the bottom. You should see live data:
+![fabric-rti-datasource-preview](./assets/fabric-rti-weather-datasource-preview.png)
+
+> The raw data you see with JSON will be used to map the fields in KQL in the next steps.
+
+### 4. Load Data into a Raw Table in the Eventhouse
+
+Route the stream into the Eventhouse as a **raw landing (bronze) table**.
+
+1. On the Eventstream canvas, select **Transform events or add destionation** and at the bottom, chose **Eventhouse**.
+![fabric-rti-eventhouse-destination](./assets/fabric-rti-eventhouse-destination.png)
+2. Choose **Event processing before ingestion** (or **Direct ingestion**).
+3. Select your **workspace**, the **Eventhouse** previously created, and the **KQL database**
+4. Pick **Create new** in **KQL Destination table**. 
+5. Create a new destination table named `WeatherRaw` and click **Save**:
+![fabric-rti-new-table](./assets/fabric-rti-new-table.png)
+6. At top right corner, click **Publish** the Eventstream and confirm events start flowing. You should see something like this:
+![fabric-rti-eventstream-published](./assets/fabric-rti-eventstream-published.png)
+7. Come back to the Event House (either from the workspace, or from the quick menu). 
+8. On the left, open the KQL Database, and click on the query set. (If you followed the naming, it would be called `Weather_EventHouse_queryset`)
+9. Wait a minute or two, then verify rows arrive inside it by removing default queries and replace it with `WeatherRaw | count`. You should see something like this (the number of rows will vary based on how long you waited):
+![fabric-rti-eventhouse-verify](./assets/fabric-rti-eventhouse-verify.png)
+
+### 5. Query the Data Using KQL
+
+1. Stay in the Eventhouse and let's continue to do some queries.
+2. Run a few basic queries:
+
+```kql
+// Peek at the latest raw events
+WeatherRaw
+| take 10
+
+// Count events landed in the last 15 minutes
+WeatherRaw
+| where ingestion_time() > ago(15m)
+| count
+```
+
+> `ingestion_time()` is a hidden column that tells you when each record landed — handy for validating a live stream.
+
+![fabric-rti-eventhouse-queries](./assets/fabric-rti-eventhouse-queries.png)
+
+3. KQL database comes with a lot of functions and inline command. To check the schema of the table, use the following code : `WeatherRaw | getschema`
+4. Notice that the raw schema comes from the EventStream handling. 
+
+![fabric-rti-eventhouse-queries-schema](./assets/fabric-rti-eventhouse-queries-schema.png)
+
+### 6. Create a Second-Layer (Silver) Table
+
+#### Create the WeatherSilver Table
+
+Shape the raw JSON into a clean, typed **silver table**. The `WeatherRaw` table exposes the fields sent by the Real-time Weather source: scalar columns (such as `relativeHumidity`, `uvIndex`, `cloudCover`, `hasPrecipitation`, `daytime`) and dynamic objects (such as `temperature`, `wind`, `dewPoint`) that wrap their reading in a `value` property.
+
+Run this query to create a typed table with the fields for the `WeatherSilver` table:
+
+```kql
+.create table WeatherSilver (
+    City: string,
+    ObservedAt: datetime,
+    Description: string,
+    TemperatureC: real,
+    RealFeelC: real,
+    Humidity: long,
+    DewPointC: real,
+    WindSpeedKmh: real,
+    WindGustKmh: real,
+    UvIndex: long,
+    CloudCover: long,
+    HasPrecipitation: bool,
+    IsDaytime: bool
+)
+```
+
+> Typed columns make queries faster and enable relationships with dimension data.
+
+#### Use an Update Policy to Populate the Silver Table
+
+An **update policy** automatically transforms rows from the raw table into the silver table on ingestion.
+
+1. Create a transformation function that maps raw JSON to typed columns, copy paste and run the following code in the KQL query window:
+
+```kql
+.create function WeatherRawToSilver() {
+    WeatherRaw
+    | project
+        City = tostring(locationName),
+        ObservedAt = todatetime(dateTime),
+        Description = tostring(description),
+        TemperatureC = toreal(temperature.value),
+        RealFeelC = toreal(realFeelTemperature.value),
+        Humidity = tolong(relativeHumidity),
+        DewPointC = toreal(dewPoint.value),
+        WindSpeedKmh = toreal(wind.speed.value),
+        WindGustKmh = toreal(windGust.speed.value),
+        UvIndex = tolong(uvIndex),
+        CloudCover = tolong(cloudCover),
+        HasPrecipitation = tobool(hasPrecipitation),
+        IsDaytime = tobool(daytime)
+}
+```
+
+2. Attach the update policy to `WeatherSilver`, sourced from `WeatherRaw`, run the following code in the KQL query window:
+
+```kql
+
+.alter table WeatherSilver policy update
+\```
+[
+  {
+    "IsEnabled": true,
+    "Source": "WeatherRaw",
+    "Query": "WeatherRawToSilver()",
+    "IsTransactional": false,
+    "PropagateIngestionProperties": false
+  }
+]
+\```
+
+```
+
+> The workshop markdown tends to render the code with backquote complex. The string to paste should look like this (without the backslash before the backquotes): 
+![alt text](./assets/fabric-rti-policy.png)
+
+3. New rows landing in `WeatherRaw` now flow automatically into `WeatherSilver`. Run the following query to verify (it can take a few seconds for the first rows to appear):
+
+```kql
+WeatherSilver
+| top 10 by ObservedAt desc
+```
+
+> Update policies run at ingestion time — historical rows already in `WeatherRaw` are **not** reprocessed automatically.
+
+![fabric-rti-eventhouse-verify-silver](./assets/fabric-rti-eventhouse-verify-silver.png)
+
+#### Backfill Historical Rows
+
+Because the update policy only fires on new ingestion, rows that landed in `WeatherRaw` before the policy existed are missing from `WeatherSilver`. Reuse the same `WeatherRawToSilver()` function to backfill them in one command:
+
+```kql
+.set-or-append WeatherSilver <|
+WeatherRawToSilver()
+```
+
+> `.set-or-append` runs the transformation function over the existing raw data and appends the typed results, so `WeatherSilver` now contains both historical and newly streamed rows. Re-run the verify query above to confirm the older records appear.
+
+#### Create a Dimension Table
+
+Add descriptive **dimension** data to enrich the weather facts.
+
+```kql
+.create table DimCity (
+    City: string,
+    Country: string,
+    Region: string,
+    Latitude: real,
+    Longitude: real
+)
+
+.ingest inline into table DimCity <|
+Paris,FR,Île-de-France,48.8566,2.3522
+```
+
+Join the dimension to your silver facts:
+
+```kql
+WeatherSilver
+| join kind=inner DimCity on City
+| project ObservedAt, City, Country, Region, TemperatureC, WindSpeedKmh, Humidity
+| top 10 by ObservedAt desc
+```
+
+> Dimension tables let you filter and group weather metrics by country, region, or coordinates.
+
+### 7. Aggregate with a Materialized View
+
+A **materialized view** keeps a continuously updated projection for fast reads.
+If you read the table WeatherSilver, you will notice that the events in the EventStreams contain duplicate values per ObservedAt. Let's keep only one row per date observation — the latest values for each `ObservedAt`:
+
+```kql
+.create materialized-view WeatherHourly on table WeatherSilver
+{
+    WeatherSilver
+    | summarize take_any(*) by ObservedAt
+}
+```
+
+> `take_any(*) by ObservedAt` collapses every duplicate of the same timestamp into a single row. Because materialized views can't use non-deterministic functions such as `ingestion_time()`, this is the supported KQL pattern for keeping one value per key.
+
+Query the view like any table:
+
+```kql
+WeatherHourly
+| order by ObservedAt desc
+| take 100
+```
+
+> Materialized views are ideal for dashboards — they precompute the deduplicated result so reports stay fast even as data grows.
+
+### 8. Enable OneLake Availability and Link to a Lakehouse
+
+Expose the KQL data in **OneLake** so a **Lakehouse** (and other engines) can read it.
+
+1. In the Eventhouse, open the **KQL database** settings.
+2. Turn on **OneLake availability** (Delta Lake) for the database (or for specific tables such as `WeatherSilver`).
+![fabric-rti-onelake-availability](./assets/fabric-rti-onelake-availability.png)
+3. Wait for the mirroring status to show the tables are available in OneLake.
+![fabric-rti-onelake-availability-status](./assets/fabric-rti-onelake-availability-status.png)
+4. Create a **Lakehouse** in the workspace and call it `LH_WeatherSilver`.
+5. Under **Tables**, select **New shortcut** → **Microsoft OneLake** and leave default options.
+![fabric-rti-new-shortcut](./assets/fabric-rti-new-shortcut.png)
+6. Browse to your **KQL database**, select the `WeatherSilver` and `DimCity` tables, and create the shortcut.
+7. Confirm the tables appear in the Lakehouse and can be queried with **SQL** or a **notebook** — no data copy required.
+
+> OneLake availability writes KQL data as Delta tables, so the same weather data is instantly usable across Lakehouse, Warehouse, and Power BI.
+
+### Summary
+
+You have:
+
+1. Created an **Eventhouse** and **KQL database**.
+2. Created an **Eventstream** and connected a **real-time weather source** for Paris, FR.
+3. Landed events in a **raw (bronze) table** and queried them with **KQL**.
+4. Built a **silver table** populated by an **update policy**.
+5. Added a **dimension table** and joined it to the facts.
+6. Aggregated data with a **materialized view**.
+7. Enabled **OneLake availability** and linked the data to a **Lakehouse** via a shortcut.
+
+<div class="tip" data-title="Tips">
+
+>
+> - **Land raw, transform in layers** — keep a bronze table, then refine with update policies.
+> - **Use update policies** for lightweight, per-ingestion transformations; use materialized views for aggregations.
+> - **Type your columns** in silver tables for faster queries and cleaner joins.
+> - **Enable OneLake availability** to share streaming data across Fabric without copies.
+> - **Bin by time** (`bin(Timestamp, 1h)`) to power time-series dashboards efficiently.
+>
+
+</div>
+
+### Further Reading
+
+- [Real-Time Intelligence overview](https://learn.microsoft.com/fabric/real-time-intelligence/overview)
+- [Create an Eventhouse](https://learn.microsoft.com/fabric/real-time-intelligence/create-eventhouse)
+- [Eventstream sources and destinations](https://learn.microsoft.com/fabric/real-time-intelligence/event-streams/overview)
+- [KQL update policies](https://learn.microsoft.com/kusto/management/update-policy)
+- [Materialized views](https://learn.microsoft.com/kusto/management/materialized-views/materialized-view-overview)
+- [OneLake availability for KQL databases](https://learn.microsoft.com/fabric/real-time-intelligence/one-logical-copy)
+
 
 ---
 
 ## Closing
 
+Once you're done with this lab you can delete the resource group you created at the beginning.
+
+To do so, click on **Delete resource group** in the Azure Portal to delete all the resources at once. The following Az-Cli command can also be used to delete the resource group:
+
+```bash
+# Delete the resource group with all the resources
+az group delete --name <resource-group>

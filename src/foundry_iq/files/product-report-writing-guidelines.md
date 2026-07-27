@@ -1,8 +1,6 @@
 # Contoso Product Report Writing Guidelines
 
-These guidelines describe how to write clear, consistent reports about products in the
-Contoso catalog. Follow them whenever you document a product's characteristics,
-positioning, or lifecycle status.
+These guidelines describe how to write clear, consistent reports about products in the Contoso catalog. Follow them whenever you document a product's characteristics, positioning, or lifecycle status.
 
 ## 1. Purpose and Audience
 

@@ -1,7 +1,7 @@
 # Q3 2026 Event Budget Tracker
 
 Project Alpha — Annual Sales Kickoff (Paris, Sept 15-17)
-Venue: Marriott Champs-Élysées — €45,000
+Venue: Hôtel Aurelia Champs-Élysées — €45,000
 Catering (150 pax, premium + wine): €22,500
 AV & stage setup: €18,000
 Speaker fees: €12,000
